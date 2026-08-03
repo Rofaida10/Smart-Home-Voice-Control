@@ -42,3 +42,34 @@ class SVMClassifierModel(BaseClassifier):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self._model.predict(X)
+
+
+
+@dataclass
+class RandomForestClassifierModel(BaseClassifier):
+    tune_hyperparameters: bool = True
+    param_grid: dict = field(default_factory=lambda: {
+        "n_estimators": [100, 200],
+        "max_depth": [10, 20, None],
+        "min_samples_leaf": [1, 3, 5],
+    })
+    cv: int = 3
+    random_state: int = 42
+    _model: SklearnRFC | GridSearchCV = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        base = SklearnRFC(random_state=self.random_state, n_jobs=-1)
+        if self.tune_hyperparameters:
+            self._model = GridSearchCV(base, self.param_grid, cv=self.cv, scoring="f1_macro", n_jobs=-1)
+        else:
+            self._model = base
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "RandomForestClassifierModel":
+        logger.info("RandomForestClassifierModel: fitting on %d samples, %d features", X.shape[0], X.shape[1])
+        self._model.fit(X, y)
+        if isinstance(self._model, GridSearchCV):
+            logger.info("RandomForestClassifierModel: best params=%s", self._model.best_params_)
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self._model.predict(X)
