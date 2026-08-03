@@ -101,3 +101,29 @@ class GradientBoostingClassifierModel(BaseClassifier):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self._model.predict(X)
+
+
+
+@dataclass
+class KNNClassifierModel(BaseClassifier):
+    tune_hyperparameters: bool = True
+    param_grid: dict = field(default_factory=lambda: {"n_neighbors": [3, 5, 7, 9]})
+    cv: int = 3
+    _model: SklearnKNN | GridSearchCV = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        base = SklearnKNN()
+        if self.tune_hyperparameters:
+            self._model = GridSearchCV(base, self.param_grid, cv=self.cv, scoring="f1_macro", n_jobs=-1)
+        else:
+            self._model = base
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "KNNClassifierModel":
+        logger.info("KNNClassifierModel: fitting on %d samples, %d features", X.shape[0], X.shape[1])
+        self._model.fit(X, y)
+        if isinstance(self._model, GridSearchCV):
+            logger.info("KNNClassifierModel: best params=%s", self._model.best_params_)
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self._model.predict(X)
