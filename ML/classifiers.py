@@ -145,3 +145,15 @@ class LogisticRegressionClassifierModel(BaseClassifier):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self._model.predict(X)
+
+
+def build_candidate_models() -> dict[str, BaseClassifier]:
+    """All algorithms to try per task. The pipeline picks whichever wins."""
+
+    return {
+        "SVM": SVMClassifierModel(),
+        "Random Forest": RandomForestClassifierModel(),
+        "Gradient Boosting": GradientBoostingClassifierModel(),
+        "KNN": KNNClassifierModel(),
+        "Logistic Regression": LogisticRegressionClassifierModel(),
+    }
