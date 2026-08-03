@@ -124,3 +124,73 @@ class TaskTrainingPipeline:
               f"(f1={best['metrics']['f1']:.4f}, target={MIN_REQUIRED_F1}) [{status}]\n")
 
         return best_name, best["model"], best["metrics"]
+
+
+
+class ModelWriter:
+    def __init__(self, path: Path):
+        self.path = path
+
+    def save(self, artifact: dict) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(artifact, self.path)
+        logger.info("Model artifact saved to %s", self.path)
+
+
+# Entry point
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+    )
+
+    BASE_DIR = Path(__file__).resolve().parents[1]
+    ### TODO (team): update this once the recordings + CSV are ready
+    data_path = BASE_DIR / "Data" / "recordings.csv"
+    artifacts_dir = BASE_DIR / "Model" / "artifacts"
+
+    reader = CsvDataReader(data_path)
+    preparer = FeaturePreparer()
+    splitter = DataSplitter(test_size=0.2, random_state=42)
+    evaluator = ClassificationEvaluator()
+
+    df = reader.load()
+    X, y_speaker, y_command = preparer.prepare(df)
+    (
+        X_train, X_test,
+        y_speaker_train, y_speaker_test,
+        y_command_train, y_command_test,
+        scaler,
+    ) = splitter.split(X, y_speaker, y_command)
+
+    print("\nSpeaker Identification: model comparison")
+    speaker_pipeline = TaskTrainingPipeline(evaluator, task_name="speaker")
+    speaker_best_name, speaker_best_model, speaker_metrics = speaker_pipeline.run(
+        X_train, X_test, y_speaker_train, y_speaker_test
+    )
+
+    print("Command Classification: model comparison")
+    command_pipeline = TaskTrainingPipeline(evaluator, task_name="command")
+    command_best_name, command_best_model, command_metrics = command_pipeline.run(
+        X_train, X_test, y_command_train, y_command_test
+    )
+
+    ModelWriter(artifacts_dir / "speaker_model.joblib").save({
+        "model_name": speaker_best_name,
+        "model": speaker_best_model,
+        "scaler": scaler,
+        "label_encoder": preparer.person_encoder,
+        "metrics": speaker_metrics,
+    })
+    ModelWriter(artifacts_dir / "command_model.joblib").save({
+        "model_name": command_best_name,
+        "model": command_best_model,
+        "scaler": scaler,
+        "label_encoder": preparer.command_encoder,
+        "metrics": command_metrics,
+    })
+
+    print("Final Results")
+    print(f"Speaker ID: {speaker_best_name:<20} f1={speaker_metrics['f1']:.4f}")
+    print(f"Command:    {command_best_name:<20} f1={command_metrics['f1']:.4f}")
