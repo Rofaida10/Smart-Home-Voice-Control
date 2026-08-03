@@ -7,10 +7,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from base_models import BaseClassifier, BaseEvaluator, ClassificationEvaluator
-from classifiers import build_candidate_models
-from features import COMMAND_COLUMN, FILEPATH_COLUMN, MIN_REQUIRED_F1, PERSON_COLUMN
-from sounds import extract_features
+from Model.base_models import BaseClassifier, BaseEvaluator, ClassificationEvaluator
+from Model.classifiers import build_candidate_models
+from Model.features import COMMAND_COLUMN, FILEPATH_COLUMN, MIN_REQUIRED_F1, PERSON_COLUMN
+from Model.sounds import extract_features
 
 logger = logging.getLogger(__name__)
 

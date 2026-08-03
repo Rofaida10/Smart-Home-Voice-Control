@@ -6,7 +6,7 @@ without worrying about the librosa/MFCC details
 
 import logging
 import numpy as np
-from features import N_MFCC, SAMPLE_RATE
+from Model.features import N_MFCC, SAMPLE_RATE
 logger = logging.getLogger(__name__)
 
 
