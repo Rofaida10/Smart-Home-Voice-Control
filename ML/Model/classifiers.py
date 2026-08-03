@@ -7,7 +7,7 @@ from sklearn.linear_model import LogisticRegression as SklearnLR
 from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier as SklearnKNN
 from sklearn.svm import SVC as SklearnSVC
-from Model.base_models import BaseClassifier
+from base_models import BaseClassifier
 
 logger = logging.getLogger(__name__)
 
