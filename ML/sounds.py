@@ -20,5 +20,3 @@ class AudioLoader:
 
         signal, sr = librosa.load(filepath, sr=self.sample_rate, mono=True)
         return signal, sr
-
-
