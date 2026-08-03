@@ -39,3 +39,25 @@ class FeatureExtractor:
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
         return np.concatenate([mfcc_mean, mfcc_std])
+
+
+class SoundFeaturePipeline:
+    """Convenience wrapper: filepath in, feature vector out."""
+
+    def __init__(self, loader: AudioLoader | None = None, extractor: FeatureExtractor | None = None):
+        self.loader = loader or AudioLoader()
+        self.extractor = extractor or FeatureExtractor()
+
+    def extract_features(self, filepath: str) -> np.ndarray:
+        signal, sr = self.loader.load(filepath)
+        return self.extractor.extract(signal, sr)
+
+
+# the next line creates a default pipeline instance that can be used by the rest of the codebase instead of having to create a new instance every time
+
+
+_default_pipeline = SoundFeaturePipeline()
+
+
+def extract_features(filepath: str) -> np.ndarray:
+    return _default_pipeline.extract_features(filepath)
