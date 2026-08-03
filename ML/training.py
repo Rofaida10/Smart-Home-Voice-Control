@@ -93,3 +93,34 @@ class DataSplitter:
             y_command[idx_train], y_command[idx_test],
             scaler,
         )
+
+# Multi-model training per task
+
+class TaskTrainingPipeline:
+    """Trains every candidate model for a single task (e.g. 'speaker' or 'command') evaluates them
+    and keeps the best one by F1 score"""
+
+    def __init__(self, evaluator: BaseEvaluator, task_name: str):
+        self.evaluator = evaluator
+        self.task_name = task_name
+
+    def run(self, X_train, X_test, y_train, y_test) -> tuple[str, BaseClassifier, dict]:
+        results = {}
+        models = build_candidate_models()
+
+        for name, model in models.items():
+            model.fit(X_train, y_train)
+            test_pred = model.predict(X_test)
+            metrics = self.evaluator.evaluate(y_test, test_pred)
+            results[name] = {"model": model, "metrics": metrics}
+            print(f"  [{self.task_name}] {name:<20} "
+                  f"accuracy={metrics['accuracy']:.4f}  f1={metrics['f1']:.4f}")
+
+        best_name = max(results, key=lambda n: results[n]["metrics"]["f1"])
+        best = results[best_name]
+
+        status = "OK" if best["metrics"]["f1"] >= MIN_REQUIRED_F1 else "BELOW TARGET"
+        print(f" this is best for [{self.task_name}]: {best_name} "
+              f"(f1={best['metrics']['f1']:.4f}, target={MIN_REQUIRED_F1}) [{status}]\n")
+
+        return best_name, best["model"], best["metrics"]
