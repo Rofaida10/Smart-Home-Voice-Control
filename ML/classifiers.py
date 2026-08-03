@@ -73,3 +73,31 @@ class RandomForestClassifierModel(BaseClassifier):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self._model.predict(X)
+
+
+
+
+@dataclass
+class GradientBoostingClassifierModel(BaseClassifier):
+    tune_hyperparameters: bool = False
+    n_estimators: int = 150
+    learning_rate: float = 0.1
+    max_depth: int = 3
+    random_state: int = 42
+    _model: SklearnGBC = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._model = SklearnGBC(
+            n_estimators=self.n_estimators,
+            learning_rate=self.learning_rate,
+            max_depth=self.max_depth,
+            random_state=self.random_state,
+        )
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "GradientBoostingClassifierModel":
+        logger.info("GradientBoostingClassifierModel: fitting on %d samples, %d features", X.shape[0], X.shape[1])
+        self._model.fit(X, y)
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self._model.predict(X)
