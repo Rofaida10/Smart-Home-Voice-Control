@@ -127,3 +127,21 @@ class KNNClassifierModel(BaseClassifier):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self._model.predict(X)
+    
+
+@dataclass
+class LogisticRegressionClassifierModel(BaseClassifier):
+    max_iter: int = 2000
+    random_state: int = 42
+    _model: SklearnLR = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._model = SklearnLR(max_iter=self.max_iter, random_state=self.random_state)
+
+    def fit(self, X: np.ndarray, y: np.ndarray) -> "LogisticRegressionClassifierModel":
+        logger.info("LogisticRegressionClassifierModel: fitting on %d samples, %d features", X.shape[0], X.shape[1])
+        self._model.fit(X, y)
+        return self
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        return self._model.predict(X)
