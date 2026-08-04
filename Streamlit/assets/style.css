@@ -1,330 +1,108 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
-  font-family: 'Poppins', sans-serif !important;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* ---------- Color tokens (sampled from home.png) ---------- */
-:root {
-  --accent: #e2934f;        /* sunset amber */
-  --accent-dark: #b5642f;   /* deep amber/rust */
-  --accent-soft: #f2c197;   /* warm highlight */
-  --ink-blue: #4b5671;      /* slate blue from the interior */
-  --base-dark: #17131a;     /* near-black warm base, from image shadows */
-}
-
-/* ---------- Stage / full background ---------- */
+/* Dynamic Background setup using home.png with backdrop blur overlay */
 .stApp {
-  background: var(--base-dark);
+    background: url('https://raw.githubusercontent.com/Rofaida10/Smart-Home-Voice-Control/main/Streamlit/assets/home.png') no-repeat center center fixed !important;
+    background-size: cover !important;
+    font-family: 'Poppins', sans-serif !important;
 }
 
-.stage {
-  position: relative;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-  z-index: 1;
-  overflow: hidden;
+/* Semi-transparent overlay to ensure text contrast over background */
+.stApp::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 17, 21, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 0;
+    pointer-events: none;
 }
 
-/* Full-image background, softly blurred so the text stays readable.
-   Kept on a separate layer (scaled up) so the blur never reveals hard edges. */
-.stage::before {
-  content: "";
-  position: fixed;
-  inset: -3%;
-  background: __BG_IMAGE__ no-repeat center center/cover;
-  filter: blur(6px);
-  transform: scale(1.05);
-  z-index: -2;
+/* Ensure content stays above the background overlay */
+.main .block-container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
-/* Dark veil over the photo so text has enough contrast, without hiding the room */
-.stage::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(17, 13, 20, 0.55) 0%, rgba(17, 13, 20, 0.72) 100%);
-  z-index: -1;
+/* Typography Overrides */
+html, body, [class*="css"], h1, h2, h3, h4, h5, h6, p, label, div, span, button {
+    font-family: 'Poppins', sans-serif !important;
+    color: #F3F4F6 !important;
 }
 
-/* ---------- Badge ---------- */
-.eyebrow-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-  width: 100%;
+h1, h2, h3 {
+    font-weight: 600 !important;
+    letter-spacing: -0.5px;
+    color: #FFFFFF !important;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 100px;
-  padding: 0.4rem 1.2rem 0.4rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.8);
+p, span, label {
+    color: #D1D5DB !important;
 }
 
-.dot {
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--accent);
+/* Remove empty rounded containers/rectangles in login and dashboard */
+.stAudio, 
+div[data-testid="stAudio"],
+div:empty,
+.element-container:has(iframe[height="0"]),
+div[data-testid="stVerticalBlock"] > div:empty {
+    display: none !important;
 }
 
-/* ---------- Title ---------- */
-.title {
-  font-size: clamp(2.6rem, 8vw, 5rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 0%, var(--accent-soft) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
+/* Custom Glass Cards for Content & Dashboard Units */
+div[data-testid="stMetric"],
+div[data-testid="stForm"],
+.stCard {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
-.subtitle {
-  font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.65);
-  text-align: center;
-  margin-top: 0.5rem;
-  font-weight: 400;
-  letter-spacing: 0.01em;
+/* Buttons Neutral Professional Styling (No Blues/Purples) */
+.stButton > button {
+    background: #27272A !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 0.95rem !important;
+    padding: 0.6rem 1.2rem !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
-/* ---------- Login Card ---------- */
-.login-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  padding: 2.2rem 2rem 2rem;
-  margin: 2rem 0 1.5rem;
-  width: 100%;
-  max-width: 440px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+.stButton > button:hover {
+    background: #3F3F46 !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 
-.card-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 0.4rem;
+/* Clean Input Fields */
+.stTextInput > div > div > input {
+    background: rgba(24, 24, 27, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    color: #FFFFFF !important;
+    font-family: 'Poppins', sans-serif !important;
 }
 
-.card-heading .icon {
-  width: 1.6rem;
-  height: 1.6rem;
-  stroke: var(--accent);
+.stTextInput > div > div > input:focus {
+    border-color: #A1A1AA !important;
+    box-shadow: 0 0 0 1px #A1A1AA !important;
 }
 
-.card-sub {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
-  line-height: 1.5;
-  margin-bottom: 1.8rem;
-}
-
-.mic-wrap {
-  margin: 0.25rem 0 0.75rem;
-}
-
-.mic-wrap .stButton button {
-  width: 100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark)) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 16px !important;
-  padding: 14px 24px !important;
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-  transition: all 0.3s ease !important;
-}
-
-.mic-wrap .stButton button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(226, 147, 79, 0.35);
-}
-
-/* ---------- Native Streamlit audio recorder ----------
-   Strip its default boxed/pill chrome so it reads as part of the
-   card instead of a stray empty capsule. */
-div[data-testid="stAudioInput"] {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0.25rem 0 0.75rem !important;
-}
-
-div[data-testid="stAudioInput"] > div {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
-  box-shadow: none !important;
-}
-
-div[data-testid="stAudioInput"] button {
-  background: transparent !important;
-  color: var(--accent) !important;
-  box-shadow: none !important;
-}
-
-div[data-testid="stAudioInput"] svg {
-  fill: var(--accent) !important;
-}
-
-/* Waveform bar Streamlit draws while recording */
-div[data-testid="stAudioInput"] canvas {
-  filter: hue-rotate(0deg);
-}
-
-/* ---------- Waveform (custom recording indicator) ---------- */
-.waveform {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 40px;
-  margin: 0.5rem 0 0.25rem;
-}
-
-.waveform span {
-  display: inline-block;
-  width: 4px;
-  background: var(--accent);
-  border-radius: 4px;
-  animation: wave 1.2s ease-in-out infinite;
-}
-
-.waveform span:nth-child(1) { height: 18px; animation-delay: 0.0s; }
-.waveform span:nth-child(2) { height: 28px; animation-delay: 0.1s; }
-.waveform span:nth-child(3) { height: 36px; animation-delay: 0.2s; }
-.waveform span:nth-child(4) { height: 40px; animation-delay: 0.3s; }
-.waveform span:nth-child(5) { height: 36px; animation-delay: 0.4s; }
-.waveform span:nth-child(6) { height: 28px; animation-delay: 0.5s; }
-.waveform span:nth-child(7) { height: 18px; animation-delay: 0.6s; }
-
-@keyframes wave {
-  0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
-  50% { transform: scaleY(1); opacity: 1; }
-}
-
-/* ---------- Status ---------- */
-.status-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.status-dot {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  transition: all 0.3s ease;
-}
-
-.status-dot.listening {
-  background: var(--accent);
-}
-
-.status-dot.success {
-  background: #10b981;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
-}
-
-.status-dot.error {
-  background: #ef4444;
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
-}
-
-.status-text {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
-}
-
-/* ---------- Footnote ---------- */
-.footnote {
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.25);
-  text-align: center;
-  letter-spacing: 0.02em;
-}
-
-/* ---------- Dashboard Cards ---------- */
-.dashboard-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 1.5rem;
-  margin: 0.75rem 0;
-  transition: all 0.3s ease;
-}
-
-.dashboard-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* ---------- Streamlit overrides ---------- */
-.stButton button {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark)) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 12px !important;
-  padding: 10px 20px !important;
-  font-weight: 600 !important;
-  transition: all 0.3s ease !important;
-}
-
-.stButton button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(226, 147, 79, 0.3);
-}
-
-div[data-testid="column"] .stButton button {
-  width: 100% !important;
-}
-
-div[data-testid="metric-container"] {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 768px) {
-  .login-card {
-    padding: 1.5rem 1.25rem;
-    margin: 1.5rem 0;
-  }
-
-  .dashboard-card {
-    padding: 1rem;
-  }
-}
+/* Hide Streamlit Default Headers and Footers */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
