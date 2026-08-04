@@ -176,8 +176,6 @@ def init_arduino():
 
 
 # Main UI Structure
-st.markdown('<div class="orb orb-a"></div>', unsafe_allow_html=True)
-st.markdown('<div class="orb orb-b"></div>', unsafe_allow_html=True)
 st.markdown('<div class="stage">', unsafe_allow_html=True)
 
 # Login Page
