@@ -288,7 +288,6 @@ else:
                             "raw_detected": clean_cmd
                         }
 
-                        # Handle Music Logic
                         if clean_cmd == "music_on":
                             st.session_state.play_music = True
                         elif clean_cmd == "music_off":
@@ -302,12 +301,12 @@ else:
                         st.session_state.cmd_status = "failed"
                         st.session_state.cmd_last_result = {
                             "speaker": speaker, 
-                            "raw_detected": clean_cmd,
+                            "raw_detected": raw_command if raw_command != "Unknown" else "Unrecognized Audio / Noise",
                             "command": "Unrecognized Command"
                         }
                 else:
                     st.session_state.cmd_status = "failed"
-                    st.session_state.cmd_last_result = {"speaker": "None", "command": "Recording Error / Silent"}
+                    st.session_state.cmd_last_result = {"speaker": "None", "raw_detected": "Audio Recording Error", "command": "Recording Error / Silent"}
 
             if st.session_state.get("cmd_status") == "success":
                 res = st.session_state.cmd_last_result
@@ -325,13 +324,13 @@ else:
                     st.session_state.cmd_last_result = {}
                     st.rerun()
 
-            # Music Player Component
+            # Audio Player Feature
             if st.session_state.play_music:
                 st.markdown('<div class="section-title">Playing Music</div>', unsafe_allow_html=True)
                 if MUSIC_FILE.exists():
                     st.audio(str(MUSIC_FILE), autoplay=True)
                 else:
-                    st.warning("Music file not found in repository path: Streamlit/audio/music.mp3")
+                    st.warning("Music file not found in path: Streamlit/audio/music.mp3")
 
             st.markdown('<div class="section-title">Manual Control</div>', unsafe_allow_html=True)
             cmd1, cmd2 = st.columns(2)
@@ -339,26 +338,34 @@ else:
                 if st.button("Light ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("light_on")
-                    st.success("Lights turned ON")
+                        st.success("Lights turned ON")
+                    else:
+                        st.warning("Arduino not connected")
                     
                 if st.button("Music OFF", use_container_width=True):
                     st.session_state.play_music = False
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("music_off")
-                    st.success("Music turned OFF")
+                        st.success("Music turned OFF")
+                    else:
+                        st.warning("Arduino not connected")
                     st.rerun()
 
             with cmd2:
                 if st.button("Light OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("light_off")
-                    st.success("Lights turned OFF")
+                        st.success("Lights turned OFF")
+                    else:
+                        st.warning("Arduino not connected")
 
                 if st.button("Music ON", use_container_width=True):
                     st.session_state.play_music = True
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("music_on")
-                    st.success("Music turned ON")
+                        st.success("Music turned ON")
+                    else:
+                        st.warning("Arduino not connected")
                     st.rerun()
 
     with col_right:
