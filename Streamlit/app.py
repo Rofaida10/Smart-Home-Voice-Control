@@ -158,10 +158,11 @@ def init_arduino():
             port = 'COM3' if sys.platform == 'win32' else '/dev/ttyUSB0'
             arduino = ArduinoController(port=port, baudrate=115200)
             if arduino.connect():
+                   arduino.authenticate("esp32")
                 st.session_state.arduino = arduino
                 return True
             else:
-                st.warning("ESP32 connected but authentication failed. Please check password.")
+                st.warning("ESP32 Connection failed.")
                 return False
         except Exception as e:
             st.warning(f"ESP32 not connected: {str(e)}")
