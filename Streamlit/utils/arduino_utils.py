@@ -20,7 +20,7 @@ class ArduinoController:
                 baudrate=self.baudrate,
                 timeout=self.timeout
             )
-            time.sleep(2)  # انتهاء إعادة تشغيل הـ ESP32 عند الاتصال
+            time.sleep(2) 
             self.connected = True
             print(f"Connected to ESP32 on {self.port} at {self.baudrate} baud")
             return True
@@ -37,7 +37,7 @@ class ArduinoController:
             print("Disconnected from ESP32")
 
     def authenticate(self, passphrase="esp32"):
-        """إرسال أمر AUTH للـ ESP32 لفتح صلاحية تنفيذ الأوامر"""
+ 
         if not self.connected or not self.serial:
             return False
             
@@ -50,7 +50,7 @@ class ArduinoController:
         return False
 
     def send_command(self, command):
-        """تحويل الصيغة تلقائياً لـ (LIGHT ON) كما يتوقعها ملف SerialManager"""
+  
         if not self.connected or not self.serial:
             print("ESP32 not connected")
             return None
