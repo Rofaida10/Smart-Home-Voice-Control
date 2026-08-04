@@ -1,5 +1,5 @@
 """
-Audio utilities for the Streamlit smart-home app.
+Audio utilities integrated with ML feature extraction rules.
 """
 
 import tempfile
@@ -22,6 +22,7 @@ def save_recorded_audio(audio_value) -> str | None:
 
 def extract_features(filepath: str) -> np.ndarray | None:
     try:
+      
         signal, sr = librosa.load(filepath, sr=SAMPLE_RATE, mono=True)
 
         if len(signal) == 0 or np.max(np.abs(signal)) < 0.01:
@@ -30,6 +31,7 @@ def extract_features(filepath: str) -> np.ndarray | None:
         mfcc = librosa.feature.mfcc(y=signal, sr=sr, n_mfcc=N_MFCC)
         mfcc_mean = np.mean(mfcc, axis=1)
         mfcc_std = np.std(mfcc, axis=1)
+
         return np.concatenate([mfcc_mean, mfcc_std])
     except Exception as e:
         print(f"Error extracting features: {e}")
