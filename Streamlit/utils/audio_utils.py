@@ -1,12 +1,3 @@
-"""
-Audio utilities for the Streamlit smart-home app.
-
-Recording happens in the user's BROWSER via st.audio_input (built into
-Streamlit >= 1.36 — no extra package needed). This is required because
-Streamlit Community Cloud servers have no physical microphone, so
-pyaudio/sounddevice (which need direct hardware access) can never work
-there. The browser records the audio and streamlit sends us the bytes.
-"""
 
 import tempfile
 
