@@ -10,17 +10,39 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     box-sizing: border-box;
 }
 
+/* ===== BACKGROUND WITH OVERLAY ===== */
 .stApp {
+    position: relative;
     background: __BG_IMAGE__ no-repeat center center/cover !important;
     background-attachment: fixed !important;
 }
 
-/* Orbs for ambient motion */
+/* Dark overlay layer to improve text readability */
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65); /* ← Adjust opacity here (0.5-0.8) */
+    backdrop-filter: blur(2px); /* ← Optional blur for extra readability */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Ensure all content sits above the overlay */
+.stApp > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== ORBS (above overlay) ===== */
 .orb {
     position: fixed;
     border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.15;
+    opacity: 0.12;
     z-index: 0;
     pointer-events: none;
 }
@@ -53,7 +75,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     100% { transform: translate(80px, -60px) scale(1.1); }
 }
 
-/* Header Alignment */
+/* ===== HEADER ===== */
 .header-container {
     text-align: center;
     margin-bottom: 2rem;
@@ -70,15 +92,15 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 100px;
     padding: 0.4rem 1.2rem;
     font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .dot {
@@ -95,7 +117,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     50% { opacity: 0.5; transform: scale(0.7); }
 }
 
-/* Title & Subtitle */
+/* Title with text-shadow for readability */
 .title {
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 700;
@@ -104,29 +126,31 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-align: center;
+    text-shadow: 0 0 40px rgba(0,0,0,0.5); /* ← Adds glow for readability */
 }
 
 .subtitle {
     font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.8);
     text-align: center;
     margin-top: 0.4rem;
     font-weight: 400;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.6);
 }
 
-/* Containers styled as glassmorphic cards */
+/* ===== GLASS CARDS (more opaque for readability) ===== */
 div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[data-testid="stVerticalBlock"] {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(0, 0, 0, 0.5) !important; /* ← Darker background */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 28px;
     padding: 2rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
-/* Headings Inside Cards */
+/* ===== CARD CONTENT ===== */
 .card-heading {
     display: flex;
     align-items: center;
@@ -145,7 +169,7 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
 
 .card-sub {
     font-size: 0.88rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.5;
     margin-bottom: 1.5rem;
 }
@@ -153,14 +177,14 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
 .section-title {
     font-size: 1rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
     margin: 1.5rem 0 0.8rem 0;
 }
 
-/* Native audio recorder widget styling */
+/* ===== AUDIO INPUT ===== */
 [data-testid="stAudioInput"] {
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(249, 115, 22, 0.35) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(249, 115, 22, 0.4) !important;
     border-radius: 16px !important;
     padding: 8px 12px !important;
     margin-bottom: 1rem !important;
@@ -168,8 +192,8 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
 }
 
 [data-testid="stAudioInput"]:hover {
-    background: rgba(255, 255, 255, 0.07) !important;
-    border-color: rgba(249, 115, 22, 0.6) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(249, 115, 22, 0.7) !important;
 }
 
 [data-testid="stAudioInput"] button {
@@ -181,7 +205,7 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
     stroke: #f97316 !important;
 }
 
-/* Buttons */
+/* ===== BUTTONS ===== */
 .stButton button {
     background: linear-gradient(135deg, #f97316, #ea580c) !important;
     color: #ffffff !important;
@@ -191,26 +215,28 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
     font-weight: 600 !important;
     font-size: 0.95rem !important;
     transition: all 0.25s ease !important;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
 .stButton button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 10px 30px rgba(249, 115, 22, 0.5);
 }
 
+/* ===== METRICS ===== */
 div[data-testid="metric-container"] {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 16px;
     padding: 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     margin-top: 1rem;
 }
 
-/* Footnote */
+/* ===== FOOTNOTE ===== */
 .footnote {
     margin-top: 1.5rem;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.4);
     text-align: center;
     letter-spacing: 0.02em;
 }
