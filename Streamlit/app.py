@@ -1,10 +1,10 @@
 import base64
 import os
-import pickle
 from pathlib import Path
 import sys
 import time
 
+import joblib
 import numpy as np
 import streamlit as st
 from utils.arduino_utils import ArduinoController
@@ -20,7 +20,7 @@ st.set_page_config(
 
 # Paths configuration
 ASSETS = Path(__file__).parent / "assets"
-MODELS_DIR = Path(__file__).parent.parent / "ML"
+MODELS_DIR = Path(__file__).parent.parent / "ML" / "Model" / "artifacts"
 
 # Inline SVG icons
 ICON_LOCK = """
@@ -89,25 +89,22 @@ if "cmd_last_result" not in st.session_state:
 @st.cache_resource
 def load_ml_models():
     models = {
-        'speaker_model': None,
-        'command_model': None,
-        'command_classes': ['light_on', 'light_off', 'music_on', 'music_off']
+        'speaker': None,
+        'command': None,
     }
 
-    speaker_pkl = MODELS_DIR / "speaker_model.pkl"
-    if speaker_pkl.exists():
+    speaker_path = MODELS_DIR / "speaker_model.joblib"
+    if speaker_path.exists():
         try:
-            with open(speaker_pkl, 'rb') as f:
-                models['speaker_model'] = pickle.load(f)
+            models['speaker'] = joblib.load(speaker_path)
             print("Speaker model loaded successfully.")
         except Exception as e:
             print(f"Error loading speaker model: {e}")
 
-    command_pkl = MODELS_DIR / "command_model.pkl"
-    if command_pkl.exists():
+    command_path = MODELS_DIR / "command_model.joblib"
+    if command_path.exists():
         try:
-            with open(command_pkl, 'rb') as f:
-                models['command_model'] = pickle.load(f)
+            models['command'] = joblib.load(command_path)
             print("Command model loaded successfully.")
         except Exception as e:
             print(f"Error loading command model: {e}")
@@ -140,22 +137,22 @@ def process_voice_command(audio_path):
     features_reshaped = features.reshape(1, -1)
 
     speaker_name = "Unknown"
-    if ml_models.get('speaker_model') is not None:
+    speaker_artifact = ml_models.get('speaker')
+    if speaker_artifact is not None:
         try:
-            speaker_pred = ml_models['speaker_model'].predict(features_reshaped)
-            speaker_map = {0: "Person A", 1: "Person B", 2: "Person C"}
-            speaker_name = speaker_map.get(speaker_pred[0], "Unknown")
+            X = speaker_artifact['scaler'].transform(features_reshaped)
+            pred_idx = speaker_artifact['model'].predict(X)
+            speaker_name = speaker_artifact['label_encoder'].inverse_transform(pred_idx)[0]
         except Exception as e:
             print(f"Speaker prediction error: {e}")
 
     command_text = "Unknown"
-    if ml_models.get('command_model') is not None:
+    command_artifact = ml_models.get('command')
+    if command_artifact is not None:
         try:
-            command_pred = ml_models['command_model'].predict(features_reshaped)
-            command_idx = int(command_pred[0])
-            classes = ml_models.get('command_classes', [])
-            if 0 <= command_idx < len(classes):
-                command_text = classes[command_idx]
+            X = command_artifact['scaler'].transform(features_reshaped)
+            pred_idx = command_artifact['model'].predict(X)
+            command_text = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
         except Exception as e:
             print(f"Command prediction error: {e}")
 
