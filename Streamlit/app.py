@@ -85,6 +85,8 @@ if "cmd_last_result" not in st.session_state:
 @st.cache_resource
 def load_ml_models():
     models = {'speaker': None, 'command': None}
+    
+    # تم إصلاح المسار بدون تكرار
     speaker_path = MODELS_DIR / "speaker_model.joblib"
     if speaker_path.exists():
         try:
@@ -92,6 +94,7 @@ def load_ml_models():
         except Exception as e:
             print(f"Error loading speaker model: {e}")
 
+    # تم إصلاح المسار بدون تكرار
     command_path = MODELS_DIR / "command_model.joblib"
     if command_path.exists():
         try:
@@ -108,12 +111,11 @@ ml_models = load_ml_models()
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
     expected_password = "esp32"
-    if expected_password == text and text != "":
+    clean_text = str(text).strip().lower()
+    if expected_password == clean_text and clean_text != "":
         st.session_state.authenticated = True
         st.session_state.unlocked = True
         st.session_state.current_page = "dashboard"
-        if st.session_state.arduino:
-            st.session_state.arduino.authenticate(text)
         return True, text
     else:
         st.session_state.password_attempts += 1
@@ -122,6 +124,9 @@ def authenticate_user(audio_path):
 
 def process_voice_command(audio_path):
     features = extract_features(audio_path)
+    if features is None:
+        return "Unknown", "Unknown"
+
     features_reshaped = features.reshape(1, -1)
 
     speaker_name = "Unknown"
@@ -153,10 +158,11 @@ def init_arduino():
             port = 'COM3' if sys.platform == 'win32' else '/dev/ttyUSB0'
             arduino = ArduinoController(port=port, baudrate=115200)
             if arduino.connect():
+                arduino.authenticate("esp32")
                 st.session_state.arduino = arduino
                 return True
             else:
-                st.warning("ESP32 connected but authentication failed. Please check password.")
+                st.warning("ESP32 Connection failed.")
                 return False
         except Exception as e:
             st.warning(f"ESP32 not connected: {str(e)}")
@@ -181,7 +187,6 @@ if st.session_state.current_page == "login":
 
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
-        # Streamlit container with styling wrapper
         with st.container():
             st.markdown(
                 f'<div class="card-heading">{ICON_LOCK}<span>Secure Login</span></div>'
@@ -264,21 +269,24 @@ else:
 
                 if audio_path:
                     with st.spinner("Processing voice command..."):
-                        speaker, command = process_voice_command(audio_path)
+                        speaker, raw_command = process_voice_command(audio_path)
 
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    if command != "Unknown":
+                    # تقييس الحروف لمعالجة Case Sensitivity
+                    clean_cmd = str(raw_command).strip().lower()
+                    valid_commands = ["light_on", "light_off", "music_on", "music_off"]
+
+                    if clean_cmd in valid_commands:
+                        display_cmd = clean_cmd.replace("_", " ").upper()
                         st.session_state.cmd_status = "success"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": command}
+                        st.session_state.cmd_last_result = {"speaker": speaker, "command": display_cmd}
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = command.upper()
-                            if arduino_cmd in ["LIGHT_ON", "LIGHT_OFF", "MUSIC_ON", "MUSIC_OFF"]:
-                                response = st.session_state.arduino.send_command(arduino_cmd)
-                                if response:
-                                    st.session_state.cmd_last_result["arduino_response"] = response
+                            response = st.session_state.arduino.send_command(clean_cmd)
+                            if response:
+                                st.session_state.cmd_last_result["arduino_response"] = response
                     else:
                         st.session_state.cmd_status = "failed"
                         st.session_state.cmd_last_result = {"speaker": speaker, "command": "Unrecognized Command"}
@@ -307,26 +315,26 @@ else:
             with cmd1:
                 if st.button("Light ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("LIGHT_ON")
+                        st.session_state.arduino.send_command("light_on")
                         st.success("Lights turned ON")
                     else:
                         st.warning("Arduino not connected")
                 if st.button("Music OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("MUSIC_OFF")
+                        st.session_state.arduino.send_command("music_off")
                         st.success("Music turned OFF")
                     else:
                         st.warning("Arduino not connected")
             with cmd2:
                 if st.button("Light OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("LIGHT_OFF")
+                        st.session_state.arduino.send_command("light_off")
                         st.success("Lights turned OFF")
                     else:
                         st.warning("Arduino not connected")
                 if st.button("Music ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("MUSIC_ON")
+                        st.session_state.arduino.send_command("music_on")
                         st.success("Music turned ON")
                     else:
                         st.warning("Arduino not connected")
