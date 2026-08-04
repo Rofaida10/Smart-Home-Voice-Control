@@ -23,7 +23,7 @@ def save_recorded_audio(audio_value) -> str | None:
 def extract_features(filepath: str) -> np.ndarray | None:
     try:
         signal, sr = librosa.load(filepath, sr=SAMPLE_RATE, mono=True)
-        
+
         if len(signal) == 0 or np.max(np.abs(signal)) < 0.01:
             return None
 
