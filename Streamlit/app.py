@@ -273,19 +273,22 @@ else:
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    if command and str(command).lower() != "unknown":
+                    # Normalize command check
+                    valid_commands = ["light_on", "light_off", "music_on", "music_off"]
+                    clean_command = str(command).strip().lower()
+
+                    if clean_command in valid_commands:
                         st.session_state.cmd_status = "success"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": command}
+                        st.session_state.cmd_last_result = {"speaker": speaker, "command": clean_command.upper()}
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = str(command).strip().upper()
-                            if arduino_cmd in ["LIGHT_ON", "LIGHT_OFF", "MUSIC_ON", "MUSIC_OFF"]:
-                                response = st.session_state.arduino.send_command(arduino_cmd)
-                                if response:
-                                    st.session_state.cmd_last_result["arduino_response"] = response
+                            arduino_cmd = clean_command.upper()
+                            response = st.session_state.arduino.send_command(arduino_cmd)
+                            if response:
+                                st.session_state.cmd_last_result["arduino_response"] = response
                     else:
                         st.session_state.cmd_status = "failed"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": "Unrecognized Command"}
+                        st.session_state.cmd_last_result = {"speaker": speaker, "command": f"Unrecognized Command ({command})"}
                 else:
                     st.session_state.cmd_status = "failed"
                     st.session_state.cmd_last_result = {"speaker": "None", "command": "Recording Error / Silent"}
