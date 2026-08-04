@@ -13,6 +13,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 .stApp {
     background: __BG_IMAGE__ no-repeat center center/cover !important;
     background-attachment: fixed !important;
+    position: relative;
 }
 
 .stApp::before {
@@ -20,10 +21,11 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    backdrop-filter: blur(10px) brightness(0.75);
-    -webkit-backdrop-filter: blur(10px) brightness(0.75);
+    width: 100vw;
+    height: 100vh;
+    backdrop-filter: blur(8px) brightness(0.7);
+    -webkit-backdrop-filter: blur(8px) brightness(0.7);
+    z-index: 0;
     pointer-events: none;
 }
 
@@ -32,6 +34,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     border-radius: 50%;
     filter: blur(80px);
     opacity: 0.15;
+    z-index: 0;
     pointer-events: none;
 }
 
@@ -66,6 +69,8 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 .header-container {
     text-align: center;
     margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
 }
 
 .eyebrow-row {
@@ -79,14 +84,15 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 100px;
     padding: 0.4rem 1.2rem;
     font-size: 0.75rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .dot {
@@ -115,21 +121,23 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 .subtitle {
     font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.65);
     text-align: center;
     margin-top: 0.4rem;
     font-weight: 400;
 }
 
-div[data-testid="stColumn"] > div {
-    background: rgba(20, 20, 25, 0.45);
+div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[data-testid="stVerticalBlock"] {
+    background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 1.8rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    position: relative;
+    z-index: 1;
 }
 
 .card-heading {
@@ -150,7 +158,7 @@ div[data-testid="stColumn"] > div {
 
 .card-sub {
     font-size: 0.88rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
     line-height: 1.5;
     margin-bottom: 1.5rem;
 }
@@ -158,13 +166,13 @@ div[data-testid="stColumn"] > div {
 .section-title {
     font-size: 1rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
     margin: 1.5rem 0 0.8rem 0;
 }
 
 [data-testid="stAudioInput"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(249, 115, 22, 0.4) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(249, 115, 22, 0.35) !important;
     border-radius: 16px !important;
     padding: 8px 12px !important;
     margin-bottom: 1rem !important;
@@ -172,8 +180,8 @@ div[data-testid="stColumn"] > div {
 }
 
 [data-testid="stAudioInput"]:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(249, 115, 22, 0.7) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(249, 115, 22, 0.6) !important;
 }
 
 [data-testid="stAudioInput"] button {
@@ -205,14 +213,16 @@ div[data-testid="metric-container"] {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     margin-top: 1rem;
 }
 
 .footnote {
     margin-top: 1.5rem;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.3);
     text-align: center;
     letter-spacing: 0.02em;
+    position: relative;
+    z-index: 1;
 }
