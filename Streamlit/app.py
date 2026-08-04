@@ -8,7 +8,7 @@ import time
 import numpy as np
 import streamlit as st
 from Streamlit.utils.arduino_utils import ArduinoController
-from Streamlit.utils.audio_utils import extract_features, record_audio
+from Streamlit.utils.audio_utils import extract_features, save_recorded_audio
 from Streamlit.utils.stt_utils import transcribe_audio
 
 st.set_page_config(
@@ -207,13 +207,13 @@ if st.session_state.current_page == "login":
 
         st.markdown('<div class="mic-wrap">', unsafe_allow_html=True)
 
-        if st.button("Record Voice", use_container_width=True):
+        auth_audio = st.audio_input("Speak your passphrase", key="auth_audio_input")
+
+        if auth_audio is not None and st.button("Verify Voice", use_container_width=True):
             st.session_state.auth_status = None
             st.session_state.auth_last_text = ""
 
-            st.info("Listening... Speak the passphrase NOW!")
-
-            audio_path = record_audio(duration=4)
+            audio_path = save_recorded_audio(auth_audio)
 
             if audio_path:
                 with st.spinner("Transcribing and Verifying..."):
@@ -280,12 +280,13 @@ else:
             unsafe_allow_html=True,
         )
 
-        if st.button("Record Command", use_container_width=True):
+        cmd_audio = st.audio_input("Speak your command", key="cmd_audio_input")
+
+        if cmd_audio is not None and st.button("Process Command", use_container_width=True):
             st.session_state.cmd_status = None
             st.session_state.cmd_last_result = {}
 
-            st.info("Listening... Speak command now.")
-            audio_path = record_audio(duration=3)
+            audio_path = save_recorded_audio(cmd_audio)
 
             if audio_path:
                 with st.spinner("Processing voice command..."):
