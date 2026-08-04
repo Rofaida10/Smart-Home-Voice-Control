@@ -13,22 +13,9 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 .stApp {
     background: __BG_IMAGE__ no-repeat center center/cover !important;
     background-attachment: fixed !important;
-    position: relative;
 }
 
-.stApp::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    backdrop-filter: blur(8px) brightness(0.7);
-    -webkit-backdrop-filter: blur(8px) brightness(0.7);
-    z-index: 0;
-    pointer-events: none;
-}
-
+/* Orbs for ambient motion */
 .orb {
     position: fixed;
     border-radius: 50%;
@@ -66,11 +53,10 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     100% { transform: translate(80px, -60px) scale(1.1); }
 }
 
+/* Header Alignment */
 .header-container {
     text-align: center;
     margin-bottom: 2rem;
-    position: relative;
-    z-index: 1;
 }
 
 .eyebrow-row {
@@ -109,6 +95,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     50% { opacity: 0.5; transform: scale(0.7); }
 }
 
+/* Title & Subtitle */
 .title {
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 700;
@@ -127,6 +114,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     font-weight: 400;
 }
 
+/* Containers styled as glassmorphic cards */
 div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[data-testid="stVerticalBlock"] {
     background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(16px);
@@ -136,10 +124,9 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
     padding: 2rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    position: relative;
-    z-index: 1;
 }
 
+/* Headings Inside Cards */
 .card-heading {
     display: flex;
     align-items: center;
@@ -170,6 +157,7 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
     margin: 1.5rem 0 0.8rem 0;
 }
 
+/* Native audio recorder widget styling */
 [data-testid="stAudioInput"] {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(249, 115, 22, 0.35) !important;
@@ -193,6 +181,7 @@ div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[
     stroke: #f97316 !important;
 }
 
+/* Buttons */
 .stButton button {
     background: linear-gradient(135deg, #f97316, #ea580c) !important;
     color: #ffffff !important;
@@ -217,12 +206,11 @@ div[data-testid="metric-container"] {
     margin-top: 1rem;
 }
 
+/* Footnote */
 .footnote {
     margin-top: 1.5rem;
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.3);
     text-align: center;
     letter-spacing: 0.02em;
-    position: relative;
-    z-index: 1;
 }
