@@ -18,34 +18,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Paths configuration
+# Configuration Paths
 ASSETS = Path(__file__).parent / "assets"
 MODELS_DIR = Path(__file__).parent.parent / "ML" / "Model" / "artifacts"
 
-# Inline SVG icons
-ICON_LOCK = """
-<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="4.5" y="10.5" width="15" height="10" rx="2.2"></rect>
-  <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path>
-</svg>
-"""
+ICON_LOCK = """<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"></rect><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"></path></svg>"""
+ICON_COMMANDS = """<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>"""
+ICON_TEMP = """<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"></path><path d="M12 22v-10"></path><circle cx="12" cy="15" r="3"></circle></svg>"""
 
-ICON_COMMANDS = """
-<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <polyline points="4 17 10 11 4 5"></polyline>
-  <line x1="12" y1="19" x2="20" y2="19"></line>
-</svg>
-"""
-
-ICON_TEMP = """
-<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 2v10"></path>
-  <path d="M12 22v-10"></path>
-  <circle cx="12" cy="15" r="3"></circle>
-</svg>
-"""
-
-# Load background styles
 img_path = ASSETS / "home.png"
 if img_path.exists():
     b64 = base64.b64encode(img_path.read_bytes()).decode()
@@ -58,7 +38,7 @@ if css_path.exists():
     css = css_path.read_text().replace("__BG_IMAGE__", bg_css)
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Session state initialization
+# Session States
 if "recording" not in st.session_state:
     st.session_state.recording = False
 if "unlocked" not in st.session_state:
@@ -106,15 +86,32 @@ def load_ml_models():
 ml_models = load_ml_models()
 
 
+def init_arduino():
+    if st.session_state.arduino is None:
+        try:
+            port = 'COM3' if sys.platform == 'win32' else '/dev/ttyUSB0'
+            arduino = ArduinoController(port=port, baudrate=115200)
+            if arduino.connect():
+                arduino.authenticate("esp32")
+                st.session_state.arduino = arduino
+                return True
+            else:
+                st.warning("ESP32 Connection failed.")
+                return False
+        except Exception as e:
+            st.warning(f"ESP32 not connected: {str(e)}")
+            return False
+    return True
+
+
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
     expected_password = "esp32"
-    if expected_password == text and text != "":
+    if expected_password == str(text).strip().lower():
         st.session_state.authenticated = True
         st.session_state.unlocked = True
         st.session_state.current_page = "dashboard"
-        if st.session_state.arduino:
-            st.session_state.arduino.authenticate(text)
+        init_arduino()
         return True, text
     else:
         st.session_state.password_attempts += 1
@@ -152,29 +149,9 @@ def process_voice_command(audio_path):
     return speaker_name, command_text
 
 
-def init_arduino():
-    if st.session_state.arduino is None:
-        try:
-            port = 'COM3' if sys.platform == 'win32' else '/dev/ttyUSB0'
-            arduino = ArduinoController(port=port, baudrate=115200)
-            if arduino.connect():
-                   arduino.authenticate("esp32")
-                st.session_state.arduino = arduino
-                return True
-            else:
-                st.warning("ESP32 Connection failed.")
-                return False
-        except Exception as e:
-            st.warning(f"ESP32 not connected: {str(e)}")
-            return False
-    return True
+# UI Layout
+st.markdown('<div class="orb orb-a"></div><div class="orb orb-b"></div>', unsafe_allow_html=True)
 
-
-# Main UI Structure
-st.markdown('<div class="orb orb-a"></div>', unsafe_allow_html=True)
-st.markdown('<div class="orb orb-b"></div>', unsafe_allow_html=True)
-
-# Login Page
 if st.session_state.current_page == "login":
     st.markdown(
         '<div class="header-container">'
@@ -188,17 +165,12 @@ if st.session_state.current_page == "login":
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
         with st.container():
-            st.markdown(
-                f'<div class="card-heading">{ICON_LOCK}<span>Secure Login</span></div>'
-                '<div class="card-sub">Your voice is matched using on-device voice biometrics.</div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(f'<div class="card-heading">{ICON_LOCK}<span>Secure Login</span></div>', unsafe_allow_html=True)
 
             auth_audio = st.audio_input("Speak your passphrase", key="auth_audio_input")
 
             if auth_audio is not None and st.button("Verify Voice", use_container_width=True):
                 st.session_state.auth_status = None
-                st.session_state.auth_last_text = ""
                 audio_path = save_recorded_audio(auth_audio)
 
                 if audio_path:
@@ -210,30 +182,20 @@ if st.session_state.current_page == "login":
 
                     if success:
                         st.success("Unlocked. Welcome home!")
-                        init_arduino()
                         time.sleep(0.5)
                         st.rerun()
                     else:
                         st.session_state.auth_status = "failed"
                         st.session_state.auth_last_text = text if text else "Nothing heard / Silence"
-                else:
-                    st.session_state.auth_status = "failed"
-                    st.session_state.auth_last_text = "Recording error / No input"
 
             if st.session_state.get("auth_status") == "failed":
                 st.error(f'Authentication failed. Transcribed: "{st.session_state.auth_last_text}"')
-                if st.button("Try Again", use_container_width=True, key="login_retry"):
-                    st.session_state.auth_status = None
-                    st.session_state.auth_last_text = ""
-                    st.rerun()
 
-# Dashboard Page
 else:
     st.markdown(
         '<div class="header-container">'
         '<div class="eyebrow-row"><div class="badge"><span class="dot"></span>Voice Controlled Smart Home</div></div>'
         '<div class="title">Control Panel</div>'
-        '<div class="subtitle">Use your voice to control your smart home devices.</div>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -244,8 +206,6 @@ else:
             st.session_state.authenticated = False
             st.session_state.unlocked = False
             st.session_state.current_page = "login"
-            st.session_state.cmd_status = None
-            st.session_state.cmd_last_result = {}
             if st.session_state.arduino:
                 st.session_state.arduino.disconnect()
                 st.session_state.arduino = None
@@ -255,16 +215,12 @@ else:
 
     with col_left:
         with st.container():
-            st.markdown(
-                f'<div class="card-heading">{ICON_COMMANDS}<span>Voice Command</span></div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(f'<div class="card-heading">{ICON_COMMANDS}<span>Voice Command</span></div>', unsafe_allow_html=True)
 
             cmd_audio = st.audio_input("Speak your command", key="cmd_audio_input")
 
             if cmd_audio is not None and st.button("Process Command", use_container_width=True):
                 st.session_state.cmd_status = None
-                st.session_state.cmd_last_result = {}
                 audio_path = save_recorded_audio(cmd_audio)
 
                 if audio_path:
@@ -274,77 +230,57 @@ else:
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    # Normalize command check
-                    valid_commands = ["light_on", "light_off", "music_on", "music_off"]
-                    clean_command = str(command).strip().lower()
-
-                    if clean_command in valid_commands:
+                    # الموديل يرجع الكلمات مقسمة بـ _ مثل "light_on"
+                    clean_cmd = str(command).strip().lower()
+                    
+                    if clean_cmd != "unknown":
                         st.session_state.cmd_status = "success"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": clean_command.upper()}
+                        st.session_state.cmd_last_result = {"speaker": speaker, "command": clean_cmd.replace("_", " ").upper()}
 
+                        # إرسال إلى ESP32
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = clean_command.upper()
-                            response = st.session_state.arduino.send_command(arduino_cmd)
-                            if response:
-                                st.session_state.cmd_last_result["arduino_response"] = response
+                            res = st.session_state.arduino.send_command(clean_cmd)
+                            if res:
+                                st.session_state.cmd_last_result["arduino_response"] = res
                     else:
                         st.session_state.cmd_status = "failed"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": f"Unrecognized Command ({command})"}
-                else:
-                    st.session_state.cmd_status = "failed"
-                    st.session_state.cmd_last_result = {"speaker": "None", "command": "Recording Error / Silent"}
+                        st.session_state.cmd_last_result = {"speaker": speaker, "command": "Unrecognized Command"}
 
             if st.session_state.get("cmd_status") == "success":
                 res = st.session_state.cmd_last_result
                 st.success(f"Command Executed: {res.get('command')}")
-                st.markdown(f"**Speaker:** {res.get('speaker')}")
-                st.markdown(f"**Command:** {res.get('command')}")
+                st.markdown(f"**Speaker Recognized:** {res.get('speaker')}")
                 if not (st.session_state.arduino and st.session_state.arduino.is_connected):
                     st.warning("Arduino not connected. Command simulated.")
 
             elif st.session_state.get("cmd_status") == "failed":
                 res = st.session_state.cmd_last_result
-                st.error(f"Failed to process command. Result: {res.get('command')}")
-                if st.button("Try Again", use_container_width=True, key="cmd_retry"):
-                    st.session_state.cmd_status = None
-                    st.session_state.cmd_last_result = {}
-                    st.rerun()
+                st.error(f"Failed to process command: {res.get('command')}")
 
             st.markdown('<div class="section-title">Manual Control</div>', unsafe_allow_html=True)
             cmd1, cmd2 = st.columns(2)
             with cmd1:
                 if st.button("Light ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("LIGHT_ON")
-                        st.success("Lights turned ON")
-                    else:
-                        st.warning("Arduino not connected")
+                        st.session_state.arduino.send_command("light_on")
+                        st.success("Lights ON sent")
                 if st.button("Music OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("MUSIC_OFF")
-                        st.success("Music turned OFF")
-                    else:
-                        st.warning("Arduino not connected")
+                        st.session_state.arduino.send_command("music_off")
+                        st.success("Music OFF sent")
             with cmd2:
                 if st.button("Light OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("LIGHT_OFF")
-                        st.success("Lights turned OFF")
-                    else:
-                        st.warning("Arduino not connected")
+                        st.session_state.arduino.send_command("light_off")
+                        st.success("Lights OFF sent")
                 if st.button("Music ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
-                        st.session_state.arduino.send_command("MUSIC_ON")
-                        st.success("Music turned ON")
-                    else:
-                        st.warning("Arduino not connected")
+                        st.session_state.arduino.send_command("music_on")
+                        st.success("Music ON sent")
 
     with col_right:
         with st.container():
-            st.markdown(
-                f'<div class="card-heading">{ICON_TEMP}<span>Temperature Sensor</span></div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(f'<div class="card-heading">{ICON_TEMP}<span>Temperature Sensor</span></div>', unsafe_allow_html=True)
 
             if st.button("Read Temperature", use_container_width=True):
                 if st.session_state.arduino and st.session_state.arduino.is_connected:
@@ -355,11 +291,4 @@ else:
                         st.warning("No data received from sensor")
                 else:
                     import random
-                    temp = random.uniform(20, 35)
-                    st.metric("Temperature (Simulated)", f"{temp:.1f}°C")
-                    st.info("Arduino not connected")
-
-st.markdown(
-    '<div class="footnote">Protected by on-device voice biometrics</div>',
-    unsafe_allow_html=True,
-)
+                    st.metric("Temperature (Simulated)", f"{random.uniform(20, 30):.1f}°C")
