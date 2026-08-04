@@ -10,17 +10,9 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     box-sizing: border-box;
 }
 
-.stage {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1.5rem;
-    background: __BG_IMAGE__ no-repeat center center/cover;
-    background-attachment: fixed;
-    z-index: 1;
+.stApp {
+    background: __BG_IMAGE__ no-repeat center center/cover !important;
+    background-attachment: fixed !important;
 }
 
 /* Orbs for ambient motion */
@@ -61,11 +53,16 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     100% { transform: translate(80px, -60px) scale(1.1); }
 }
 
-/* Badge */
+/* Header Alignment */
+.header-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
 .eyebrow-row {
     display: flex;
     justify-content: center;
-    margin-bottom: 1.25rem;
+    margin-bottom: 0.75rem;
     width: 100%;
 }
 
@@ -75,13 +72,13 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     gap: 0.5rem;
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 100px;
-    padding: 0.4rem 1.2rem 0.4rem 0.8rem;
+    padding: 0.4rem 1.2rem;
     font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .dot {
@@ -98,9 +95,9 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     50% { opacity: 0.5; transform: scale(0.7); }
 }
 
-/* Title */
+/* Title & Subtitle */
 .title {
-    font-size: clamp(2.6rem, 8vw, 5rem);
+    font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     background: linear-gradient(135deg, #ffffff 0%, #fdba74 100%);
@@ -111,83 +108,68 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 .subtitle {
     font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.65);
     text-align: center;
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
     font-weight: 400;
-    letter-spacing: 0.01em;
 }
 
-/* Login Card */
-.login-card {
+/* Containers styled as glassmorphic cards */
+div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[data-testid="stVerticalBlock"] {
     background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 32px;
-    padding: 2.2rem 2rem 2rem;
-    margin: 2rem 0 1.5rem;
-    width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
 
+/* Headings Inside Cards */
 .card-heading {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.4rem;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
 }
 
 .card-heading .icon {
     width: 1.6rem;
     height: 1.6rem;
-    stroke: #f97316;
+    color: #f97316;
 }
 
 .card-sub {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.55);
     line-height: 1.5;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
 }
 
-.mic-wrap {
-    margin: 0.25rem 0 0.75rem;
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 1.5rem 0 0.8rem 0;
 }
 
-.mic-wrap .stButton button {
-    width: 100%;
-    background: linear-gradient(135deg, #f97316, #9a3412) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 16px !important;
-    padding: 14px 24px !important;
-    font-weight: 600 !important;
-    font-size: 1rem !important;
-    transition: all 0.3s ease !important;
-}
-
-.mic-wrap .stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.4);
-}
-
-/* Native audio recorder widget (used for the passphrase / voice command) -
-   restyled so it reads as a real input, not an empty box. Function untouched. */
+/* Native audio recorder widget styling */
 [data-testid="stAudioInput"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(249, 115, 22, 0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(249, 115, 22, 0.35) !important;
     border-radius: 16px !important;
-    padding: 6px 10px !important;
-    transition: all 0.25s ease;
+    padding: 8px 12px !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
 }
 
 [data-testid="stAudioInput"]:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border-color: rgba(249, 115, 22, 0.55) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(249, 115, 22, 0.6) !important;
 }
 
 [data-testid="stAudioInput"] button {
@@ -199,146 +181,36 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     stroke: #f97316 !important;
 }
 
-[data-testid="stAudioInputWaveSurfer"],
-[data-testid="stAudioInput"] canvas {
-    filter: hue-rotate(200deg) saturate(1.4);
-}
-
-[data-testid="stWidgetLabel"] p {
-    color: rgba(255, 255, 255, 0.55) !important;
-    font-size: 0.85rem !important;
-}
-
-/* Waveform animation */
-.waveform {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 40px;
-    margin: 0.5rem 0 0.25rem;
-}
-
-.waveform span {
-    display: inline-block;
-    width: 4px;
-    background: #f97316;
-    border-radius: 4px;
-    animation: wave 1.2s ease-in-out infinite;
-}
-
-.waveform span:nth-child(1) { height: 18px; animation-delay: 0.0s; }
-.waveform span:nth-child(2) { height: 28px; animation-delay: 0.1s; }
-.waveform span:nth-child(3) { height: 36px; animation-delay: 0.2s; }
-.waveform span:nth-child(4) { height: 40px; animation-delay: 0.3s; }
-.waveform span:nth-child(5) { height: 36px; animation-delay: 0.4s; }
-.waveform span:nth-child(6) { height: 28px; animation-delay: 0.5s; }
-.waveform span:nth-child(7) { height: 18px; animation-delay: 0.6s; }
-
-@keyframes wave {
-    0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
-    50% { transform: scaleY(1); opacity: 1; }
-}
-
-/* Status */
-.status-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1rem;
-}
-
-.status-dot {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    transition: all 0.3s ease;
-}
-
-.status-dot.listening {
-    background: #f97316;
-    animation: pulse-dot 1s ease-in-out infinite;
-}
-
-.status-dot.success {
-    background: #10b981;
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
-}
-
-.status-dot.error {
-    background: #ef4444;
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
-}
-
-.status-text {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-/* Footnote */
-.footnote {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.2);
-    text-align: center;
-    letter-spacing: 0.02em;
-}
-
-/* Dashboard Cards */
-.dashboard-card {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 24px;
-    padding: 1.5rem;
-    margin: 0.75rem 0;
-    transition: all 0.3s ease;
-}
-
-.dashboard-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Streamlit overrides */
+/* Buttons */
 .stButton button {
-    background: linear-gradient(135deg, #f97316, #9a3412) !important;
-    color: white !important;
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    color: #ffffff !important;
     border: none !important;
-    border-radius: 12px !important;
-    padding: 10px 20px !important;
+    border-radius: 14px !important;
+    padding: 12px 20px !important;
     font-weight: 600 !important;
-    transition: all 0.3s ease !important;
+    font-size: 0.95rem !important;
+    transition: all 0.25s ease !important;
 }
 
 .stButton button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(249, 115, 22, 0.35);
-}
-
-div[data-testid="column"] .stButton button {
-    width: 100% !important;
+    box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
 }
 
 div[data-testid="metric-container"] {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 1rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .login-card {
-        padding: 1.5rem 1.25rem;
-        margin: 1.5rem 0;
-    }
-    .dashboard-card {
-        padding: 1rem;
-    }
-    .orb {
-        opacity: 0.08;
-    }
+/* Footnote */
+.footnote {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    letter-spacing: 0.02em;
 }
