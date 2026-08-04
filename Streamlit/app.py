@@ -120,6 +120,7 @@ def authenticate_user(audio_path):
         return False, text
 
 
+
 def process_voice_command(audio_path):
     features = extract_features(audio_path)
     features_reshaped = features.reshape(1, -1)
@@ -140,12 +141,66 @@ def process_voice_command(audio_path):
         try:
             X = command_artifact['scaler'].transform(features_reshaped)
             pred_idx = command_artifact['model'].predict(X)
-            command_text = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+            raw_command = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+            
+            command_text = str(raw_command).upper()
         except Exception as e:
             print(f"Command prediction error: {e}")
 
     return speaker_name, command_text
 
+
+
+# === ضعي هذا البلوك الجديد مكانه ===
+def process_voice_command(audio_path):
+    features = extract_features(audio_path)
+    features_reshaped = features.reshape(1, -1)
+
+    speaker_name = "Unknown"
+    speaker_artifact = ml_models.get('speaker')
+    if speaker_artifact is not None:
+        try:
+            X = speaker_artifact['scaler'].transform(features_reshaped)
+            pred_idx = speaker_artifact['model'].predict(X)
+            speaker_name = speaker_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+        except Exception as e:
+            print(f"Speaker prediction error: {e}")
+
+    command_text = "Unknown"
+    command_artifact = ml_models.get('command')
+    if command_artifact is not None:
+        try:
+            X = command_artifact['scaler'].transform(features_reshaped)
+            pred_idx = command_artifact['model'].predict(X)
+            raw_command = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+            # تحويل النتيجة إلى حروف كبيرة لتطابق شروط الأردوينو والواجهة
+            command_text = str(raw_command).upper()
+        except Exception as e:
+            print(f"Command prediction error: {e}")
+
+    return speaker_name, command_text
+
+
+
+if audio_path:
+    with st.spinner("Processing voice command..."):
+        speaker, command = process_voice_command(audio_path)
+
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
+
+    if command not in ["UNKNOWN", "Unknown"]:
+        st.session_state.cmd_status = "success"
+        st.session_state.cmd_last_result = {"speaker": speaker, "command": command}
+
+        if st.session_state.arduino and st.session_state.arduino.is_connected:
+            response = st.session_state.arduino.send_command(command)
+            if response:
+                st.session_state.cmd_last_result["arduino_response"] = response
+    else:
+        st.session_state.cmd_status = "failed"
+        st.session_state.cmd_last_result = {"speaker": speaker, "command": "Unrecognized Command"}
+        
 
 def init_arduino():
     if st.session_state.arduino is None:
