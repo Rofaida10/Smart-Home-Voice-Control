@@ -85,14 +85,14 @@ if "cmd_last_result" not in st.session_state:
 @st.cache_resource
 def load_ml_models():
     models = {'speaker': None, 'command': None}
-    speaker_path = MODELS_DIR / "speaker_model.joblib"
+    speaker_path = MODELS_DIR / "ML/Model/artifacts/command_model.joblib"
     if speaker_path.exists():
         try:
             models['speaker'] = joblib.load(speaker_path)
         except Exception as e:
             print(f"Error loading speaker model: {e}")
 
-    command_path = MODELS_DIR / "command_model.joblib"
+    command_path = MODELS_DIR / "ML/Model/artifacts/speaker_model.joblib"
     if command_path.exists():
         try:
             models['command'] = joblib.load(command_path)
