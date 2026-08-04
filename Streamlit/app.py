@@ -7,9 +7,9 @@ import time
 
 import numpy as np
 import streamlit as st
-from Streamlit.utils.arduino_utils import ArduinoController
-from Streamlit.utils.audio_utils import extract_features, save_recorded_audio
-from Streamlit.utils.stt_utils import transcribe_audio
+from utils.arduino_utils import ArduinoController
+from utils.audio_utils import extract_features, save_recorded_audio
+from utils.stt_utils import transcribe_audio
 
 st.set_page_config(
     page_title="Smart Home",
