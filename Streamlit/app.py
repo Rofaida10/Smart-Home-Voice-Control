@@ -21,6 +21,7 @@ st.set_page_config(
 # Paths configuration
 ASSETS = Path(__file__).parent / "assets"
 MODELS_DIR = Path(__file__).parent.parent / "ML" / "Model" / "artifacts"
+MUSIC_FILE = Path(__file__).parent / "audio" / "music.mp3"
 
 # Inline SVG icons
 ICON_LOCK = """
@@ -80,13 +81,14 @@ if "cmd_status" not in st.session_state:
     st.session_state.cmd_status = None
 if "cmd_last_result" not in st.session_state:
     st.session_state.cmd_last_result = {}
+if "play_music" not in st.session_state:
+    st.session_state.play_music = False
 
 
 @st.cache_resource
 def load_ml_models():
     models = {'speaker': None, 'command': None}
     
-    # تم إصلاح المسار بدون تكرار
     speaker_path = MODELS_DIR / "speaker_model.joblib"
     if speaker_path.exists():
         try:
@@ -94,7 +96,6 @@ def load_ml_models():
         except Exception as e:
             print(f"Error loading speaker model: {e}")
 
-    # تم إصلاح المسار بدون تكرار
     command_path = MODELS_DIR / "command_model.joblib"
     if command_path.exists():
         try:
@@ -221,7 +222,7 @@ if st.session_state.current_page == "login":
                     st.session_state.auth_last_text = "Recording error / No input"
 
             if st.session_state.get("auth_status") == "failed":
-                st.error(f'Authentication failed. Transcribed: "{st.session_state.auth_last_text}"')
+                st.error(f'Authentication failed. Heard: "{st.session_state.auth_last_text}"')
                 if st.button("Try Again", use_container_width=True, key="login_retry"):
                     st.session_state.auth_status = None
                     st.session_state.auth_last_text = ""
@@ -246,6 +247,7 @@ else:
             st.session_state.current_page = "login"
             st.session_state.cmd_status = None
             st.session_state.cmd_last_result = {}
+            st.session_state.play_music = False
             if st.session_state.arduino:
                 st.session_state.arduino.disconnect()
                 st.session_state.arduino = None
@@ -274,14 +276,23 @@ else:
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    # تقييس الحروف لمعالجة Case Sensitivity
                     clean_cmd = str(raw_command).strip().lower()
                     valid_commands = ["light_on", "light_off", "music_on", "music_off"]
 
                     if clean_cmd in valid_commands:
                         display_cmd = clean_cmd.replace("_", " ").upper()
                         st.session_state.cmd_status = "success"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": display_cmd}
+                        st.session_state.cmd_last_result = {
+                            "speaker": speaker, 
+                            "command": display_cmd,
+                            "raw_detected": clean_cmd
+                        }
+
+                        # Handle Music Logic
+                        if clean_cmd == "music_on":
+                            st.session_state.play_music = True
+                        elif clean_cmd == "music_off":
+                            st.session_state.play_music = False
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
                             response = st.session_state.arduino.send_command(clean_cmd)
@@ -289,7 +300,11 @@ else:
                                 st.session_state.cmd_last_result["arduino_response"] = response
                     else:
                         st.session_state.cmd_status = "failed"
-                        st.session_state.cmd_last_result = {"speaker": speaker, "command": "Unrecognized Command"}
+                        st.session_state.cmd_last_result = {
+                            "speaker": speaker, 
+                            "raw_detected": clean_cmd,
+                            "command": "Unrecognized Command"
+                        }
                 else:
                     st.session_state.cmd_status = "failed"
                     st.session_state.cmd_last_result = {"speaker": "None", "command": "Recording Error / Silent"}
@@ -297,18 +312,26 @@ else:
             if st.session_state.get("cmd_status") == "success":
                 res = st.session_state.cmd_last_result
                 st.success(f"Command Executed: {res.get('command')}")
+                st.info(f"System Heard: '{res.get('raw_detected')}'")
                 st.markdown(f"**Speaker:** {res.get('speaker')}")
-                st.markdown(f"**Command:** {res.get('command')}")
                 if not (st.session_state.arduino and st.session_state.arduino.is_connected):
                     st.warning("Arduino not connected. Command simulated.")
 
             elif st.session_state.get("cmd_status") == "failed":
                 res = st.session_state.cmd_last_result
-                st.error(f"Failed to process command. Result: {res.get('command')}")
+                st.error(f"Failed to process command. System Heard: '{res.get('raw_detected')}'")
                 if st.button("Try Again", use_container_width=True, key="cmd_retry"):
                     st.session_state.cmd_status = None
                     st.session_state.cmd_last_result = {}
                     st.rerun()
+
+            # Music Player Component
+            if st.session_state.play_music:
+                st.markdown('<div class="section-title">Playing Music</div>', unsafe_allow_html=True)
+                if MUSIC_FILE.exists():
+                    st.audio(str(MUSIC_FILE), autoplay=True)
+                else:
+                    st.warning("Music file not found in repository path: Streamlit/audio/music.mp3")
 
             st.markdown('<div class="section-title">Manual Control</div>', unsafe_allow_html=True)
             cmd1, cmd2 = st.columns(2)
@@ -316,28 +339,27 @@ else:
                 if st.button("Light ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("light_on")
-                        st.success("Lights turned ON")
-                    else:
-                        st.warning("Arduino not connected")
+                    st.success("Lights turned ON")
+                    
                 if st.button("Music OFF", use_container_width=True):
+                    st.session_state.play_music = False
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("music_off")
-                        st.success("Music turned OFF")
-                    else:
-                        st.warning("Arduino not connected")
+                    st.success("Music turned OFF")
+                    st.rerun()
+
             with cmd2:
                 if st.button("Light OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("light_off")
-                        st.success("Lights turned OFF")
-                    else:
-                        st.warning("Arduino not connected")
+                    st.success("Lights turned OFF")
+
                 if st.button("Music ON", use_container_width=True):
+                    st.session_state.play_music = True
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("music_on")
-                        st.success("Music turned ON")
-                    else:
-                        st.warning("Arduino not connected")
+                    st.success("Music turned ON")
+                    st.rerun()
 
     with col_right:
         with st.container():
