@@ -4,7 +4,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from base_models import BaseClassifier, BaseEvaluator, ClassificationEvaluator
@@ -15,7 +15,7 @@ from sounds import extract_features
 logger = logging.getLogger(__name__)
 
 
-# Data In Out
+### Data In w Out ((ISP)) TODO fill in once the CSV exists
 
 class DataReader(ABC):
     @abstractmethod
@@ -24,7 +24,11 @@ class DataReader(ABC):
 
 
 class CsvDataReader(DataReader):
-    """Reads the dataset CSV: columns = filepath, person, command"""
+    """Reads the dataset CSV columns = filepath, person, command
+
+    TODO : point `path` at the real CSV once recordings are
+    collected and the csv is assembled (e.g. Data/recordings.csv).
+    """
 
     def __init__(self, path: Path):
         self.path = path
@@ -42,8 +46,8 @@ class CsvDataReader(DataReader):
 # Feature preparation
 
 class FeaturePreparer:
-    """Turns the CSV rows into an audio feature matrix X and two label vectors (speaker, command)
-    extracting MFCCs only once per file"""
+    """Turns the CSV rows into an audio feature matrix X and two label
+vectors (speaker, command), extracting MFCCs only once per file."""
 
     def __init__(self):
         self.person_encoder = LabelEncoder()
@@ -61,7 +65,7 @@ class FeaturePreparer:
 
 
 class DataSplitter:
-    """Stratified train and test split (kept consistent across both targets) + scaling"""
+    """Stratified train/test split (kept consistent across both targets) + scaling"""
 
     def __init__(self, test_size: float = 0.2, random_state: int = 42):
         self.test_size = test_size
@@ -90,39 +94,11 @@ class DataSplitter:
             scaler,
         )
 
-
 # Multi-model training per task
 
-class CrossValidationChecker:
-    """Runs k-fold cross-validation on the FULL dataset per model
-
-    A single train and test split can look perfect by luck ama Cross-validation trains and evaluates on k different
-    splits and reports mean +- (positive or negaative) std which is a much more trustworthy signal
-    for whether a "1.0" score is real or a fluke
-    """
-
-    def __init__(self, task_name: str, n_splits: int = 5, random_state: int = 42):
-        self.task_name = task_name
-        self.n_splits = n_splits
-        self.random_state = random_state
-
-    def run(self, X: np.ndarray, y: np.ndarray) -> None:
-        cv = StratifiedKFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
-        models = build_candidate_models()
-
-        print(f"{self.n_splits} fold cross validation ({self.task_name})")
-        for name, model in models.items():
-            # cross_val_score needs a plain estimator not our dataclass wrapper so we reach into the underlying sklearn model
-            estimator = getattr(model, "_model", model)
-            scores = cross_val_score(estimator, X, y, cv=cv, scoring="f1_macro", n_jobs=-1)
-            print(f"    [{self.task_name}] {name:<20} "
-                  f"f1={scores.mean():.4f} (+/- {scores.std():.4f})  folds={np.round(scores, 3)}")
-        print()
-
-
 class TaskTrainingPipeline:
-    """Trains every candidate model for a single task (e.g. 'speaker' or
-    'command'), evaluates them, and keeps the best one by F1 score"""
+    """Trains every candidate model for a single task (e.g. 'speaker' or 'command') evaluates them
+    and keeps the best one by F1 score"""
 
     def __init__(self, evaluator: BaseEvaluator, task_name: str):
         self.evaluator = evaluator
@@ -144,10 +120,11 @@ class TaskTrainingPipeline:
         best = results[best_name]
 
         status = "OK" if best["metrics"]["f1"] >= MIN_REQUIRED_F1 else "BELOW TARGET"
-        print(f"  → best for [{self.task_name}]: {best_name} "
+        print(f" this is best for [{self.task_name}]: {best_name} "
               f"(f1={best['metrics']['f1']:.4f}, target={MIN_REQUIRED_F1}) [{status}]\n")
 
         return best_name, best["model"], best["metrics"]
+
 
 
 class ModelWriter:
@@ -159,6 +136,7 @@ class ModelWriter:
         joblib.dump(artifact, self.path)
         logger.info("Model artifact saved to %s", self.path)
 
+
 # Entry point
 
 if __name__ == "__main__":
@@ -168,6 +146,7 @@ if __name__ == "__main__":
     )
 
     BASE_DIR = Path(__file__).resolve().parents[1]
+    ### TODO (team): update this once the recordings + CSV are ready
     data_path = BASE_DIR / "Data" / "recordings.csv"
     artifacts_dir = BASE_DIR / "Model" / "artifacts"
 
@@ -185,22 +164,13 @@ if __name__ == "__main__":
         scaler,
     ) = splitter.split(X, y_speaker, y_command)
 
-    # Scale the FULL dataset (not just train) to feed cross-validation
-    # this checks whether a perfect score holds up across many random splits not just the one 80/20 split used below.
-
-    X_full_scaled = StandardScaler().fit_transform(X)
-
-    print("\nRobustness check (cross-validation on full dataset)")
-    CrossValidationChecker(task_name="speaker").run(X_full_scaled, y_speaker)
-    CrossValidationChecker(task_name="command").run(X_full_scaled, y_command)
-
     print("\nSpeaker Identification: model comparison")
     speaker_pipeline = TaskTrainingPipeline(evaluator, task_name="speaker")
     speaker_best_name, speaker_best_model, speaker_metrics = speaker_pipeline.run(
         X_train, X_test, y_speaker_train, y_speaker_test
     )
 
-    print("\nCommand Classification: model comparison")
+    print("Command Classification: model comparison")
     command_pipeline = TaskTrainingPipeline(evaluator, task_name="command")
     command_best_name, command_best_model, command_metrics = command_pipeline.run(
         X_train, X_test, y_command_train, y_command_test
@@ -221,6 +191,6 @@ if __name__ == "__main__":
         "metrics": command_metrics,
     })
 
-    print("\nFinal Results")
-    print(f"Speaker ID:   {speaker_best_name:<20} f1={speaker_metrics['f1']:.4f}")
-    print(f"Command:      {command_best_name:<20} f1={command_metrics['f1']:.4f}")
+    print("Final Results")
+    print(f"Speaker ID: {speaker_best_name:<20} f1={speaker_metrics['f1']:.4f}")
+    print(f"Command:    {command_best_name:<20} f1={command_metrics['f1']:.4f}")
