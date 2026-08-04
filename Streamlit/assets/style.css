@@ -1,306 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Dynamic Background setup using home.png with backdrop blur overlay */
+.stApp {
+    background: url('https://raw.githubusercontent.com/Rofaida10/Smart-Home-Voice-Control/main/Streamlit/assets/home.png') no-repeat center center fixed !important;
+    background-size: cover !important;
+    font-family: 'Poppins', sans-serif !important;
 }
 
-.stage {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1.5rem;
-    background: __BG_IMAGE__ no-repeat center center/cover;
-    background-attachment: fixed;
-    z-index: 1;
-}
-
-/* Orbs for ambient motion */
-.orb {
+/* Semi-transparent overlay to ensure text contrast over background */
+.stApp::before {
+    content: "";
     position: fixed;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.15;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 17, 21, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 0;
     pointer-events: none;
 }
 
-.orb-a {
-    width: 40vw;
-    height: 40vw;
-    top: -10%;
-    right: -10%;
-    background: #8b5cf6;
-    animation: floatA 20s ease-in-out infinite alternate;
+/* Ensure content stays above the background overlay */
+.main .block-container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
-.orb-b {
-    width: 30vw;
-    height: 30vw;
-    bottom: -10%;
-    left: -10%;
-    background: #06b6d4;
-    animation: floatB 25s ease-in-out infinite alternate;
+/* Typography Overrides */
+html, body, [class*="css"], h1, h2, h3, h4, h5, h6, p, label, div, span, button {
+    font-family: 'Poppins', sans-serif !important;
+    color: #F3F4F6 !important;
 }
 
-@keyframes floatA {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-80px, 60px) scale(1.2); }
-}
-
-@keyframes floatB {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(80px, -60px) scale(1.1); }
-}
-
-/* Badge */
-.eyebrow-row {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-    width: 100%;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 100px;
-    padding: 0.4rem 1.2rem 0.4rem 0.8rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.dot {
-    display: inline-block;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: #10b981;
-    animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.7); }
-}
-
-/* Title */
-.title {
-    font-size: clamp(2.6rem, 8vw, 5rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-align: center;
-}
-
-.subtitle {
-    font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.6);
-    text-align: center;
-    margin-top: 0.5rem;
-    font-weight: 400;
-    letter-spacing: 0.01em;
-}
-
-/* Login Card */
-.login-card {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 32px;
-    padding: 2.2rem 2rem 2rem;
-    margin: 2rem 0 1.5rem;
-    width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-}
-
-.card-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.4rem;
-}
-
-.card-heading .icon {
-    width: 1.6rem;
-    height: 1.6rem;
-    stroke: #8b5cf6;
-}
-
-.card-sub {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.5);
-    line-height: 1.5;
-    margin-bottom: 1.8rem;
-}
-
-.mic-wrap {
-    margin: 0.25rem 0 0.75rem;
-}
-
-.mic-wrap .stButton button {
-    width: 100%;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 16px !important;
-    padding: 14px 24px !important;
+h1, h2, h3 {
     font-weight: 600 !important;
-    font-size: 1rem !important;
-    transition: all 0.3s ease !important;
+    letter-spacing: -0.5px;
+    color: #FFFFFF !important;
 }
 
-.mic-wrap .stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
+p, span, label {
+    color: #D1D5DB !important;
 }
 
-/* Waveform animation */
-.waveform {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    height: 40px;
-    margin: 0.5rem 0 0.25rem;
+/* Remove empty rounded containers/rectangles in login and dashboard */
+.stAudio, 
+div[data-testid="stAudio"],
+div:empty,
+.element-container:has(iframe[height="0"]),
+div[data-testid="stVerticalBlock"] > div:empty {
+    display: none !important;
 }
 
-.waveform span {
-    display: inline-block;
-    width: 4px;
-    background: #8b5cf6;
-    border-radius: 4px;
-    animation: wave 1.2s ease-in-out infinite;
-}
-
-.waveform span:nth-child(1) { height: 18px; animation-delay: 0.0s; }
-.waveform span:nth-child(2) { height: 28px; animation-delay: 0.1s; }
-.waveform span:nth-child(3) { height: 36px; animation-delay: 0.2s; }
-.waveform span:nth-child(4) { height: 40px; animation-delay: 0.3s; }
-.waveform span:nth-child(5) { height: 36px; animation-delay: 0.4s; }
-.waveform span:nth-child(6) { height: 28px; animation-delay: 0.5s; }
-.waveform span:nth-child(7) { height: 18px; animation-delay: 0.6s; }
-
-@keyframes wave {
-    0%, 100% { transform: scaleY(0.5); opacity: 0.4; }
-    50% { transform: scaleY(1); opacity: 1; }
-}
-
-/* Status */
-.status-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1rem;
-}
-
-.status-dot {
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    transition: all 0.3s ease;
-}
-
-.status-dot.listening {
-    background: #8b5cf6;
-    animation: pulse-dot 1s ease-in-out infinite;
-}
-
-.status-dot.success {
-    background: #10b981;
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
-}
-
-.status-dot.error {
-    background: #ef4444;
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
-}
-
-.status-text {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-/* Footnote */
-.footnote {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.2);
-    text-align: center;
-    letter-spacing: 0.02em;
-}
-
-/* Dashboard Cards */
-.dashboard-card {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 24px;
-    padding: 1.5rem;
-    margin: 0.75rem 0;
-    transition: all 0.3s ease;
-}
-
-.dashboard-card:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Streamlit overrides */
-.stButton button {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
-    color: white !important;
-    border: none !important;
+/* Custom Glass Cards for Content & Dashboard Units */
+div[data-testid="stMetric"],
+div[data-testid="stForm"],
+.stCard {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 12px !important;
-    padding: 10px 20px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
-.stButton button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
+/* Buttons Neutral Professional Styling (No Blues/Purples) */
+.stButton > button {
+    background: #27272A !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 0.95rem !important;
+    padding: 0.6rem 1.2rem !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
-div[data-testid="column"] .stButton button {
-    width: 100% !important;
+.stButton > button:hover {
+    background: #3F3F46 !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
 }
 
-div[data-testid="metric-container"] {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+/* Clean Input Fields */
+.stTextInput > div > div > input {
+    background: rgba(24, 24, 27, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 8px !important;
+    color: #FFFFFF !important;
+    font-family: 'Poppins', sans-serif !important;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .login-card {
-        padding: 1.5rem 1.25rem;
-        margin: 1.5rem 0;
-    }
-    .dashboard-card {
-        padding: 1rem;
-    }
-    .orb {
-        opacity: 0.08;
-    }
+.stTextInput > div > div > input:focus {
+    border-color: #A1A1AA !important;
+    box-shadow: 0 0 0 1px #A1A1AA !important;
 }
+
+/* Hide Streamlit Default Headers and Footers */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
