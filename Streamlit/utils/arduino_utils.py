@@ -14,32 +14,30 @@ class ArduinoController:
         self.lock = threading.Lock()
 
     def connect(self):
-        """Establish connection to ESP32 / Arduino"""
         try:
             self.serial = serial.Serial(
                 port=self.port,
                 baudrate=self.baudrate,
                 timeout=self.timeout
             )
-            time.sleep(2)  # Wait for ESP32/Arduino to reset
+            time.sleep(2)  # انتهاء إعادة تشغيل הـ ESP32 عند الاتصال
             self.connected = True
-            print(f"Connected to Arduino on {self.port} at {self.baudrate} baud")
+            print(f"Connected to ESP32 on {self.port} at {self.baudrate} baud")
             return True
         except Exception as e:
-            print(f"Arduino connection error: {str(e)}")
+            print(f"ESP32 connection error: {str(e)}")
             self.connected = False
             return False
 
     def disconnect(self):
-        """Close serial connection"""
         if self.serial and self.serial.is_open:
             self.serial.close()
             self.connected = False
             self.authenticated = False
-            print("Disconnected from Arduino")
+            print("Disconnected from ESP32")
 
     def authenticate(self, passphrase="esp32"):
-        """Send AUTH command to ESP32 to unlock command processing"""
+        """إرسال أمر AUTH للـ ESP32 لفتح صلاحية تنفيذ الأوامر"""
         if not self.connected or not self.serial:
             return False
             
@@ -52,27 +50,20 @@ class ArduinoController:
         return False
 
     def send_command(self, command):
-        """
-        Send command to Arduino/ESP32.
-        Converts spaces to commands expected by SerialManager (e.g. LIGHT ON).
-        """
+        """تحويل الصيغة تلقائياً لـ (LIGHT ON) كما يتوقعها ملف SerialManager"""
         if not self.connected or not self.serial:
-            print("Arduino not connected")
+            print("ESP32 not connected")
             return None
 
-        # Format input string properly (e.g., LIGHT_ON -> LIGHT ON)
-        formatted_cmd = command.strip().upper().replace("_", " ")
+        # تحويل "light_on" أو "LIGHT_ON" إلى "LIGHT ON"
+        formatted_cmd = str(command).strip().upper().replace("_", " ")
 
         try:
             with self.lock:
-                # Flush existing buffer
                 self.serial.reset_input_buffer()
-                
-                # Write command with newline
                 self.serial.write(f"{formatted_cmd}\n".encode('utf-8'))
                 time.sleep(0.15)
                 
-                # Read response
                 response = ""
                 if self.serial.in_waiting > 0:
                     response = self.serial.readline().decode('utf-8', errors='ignore').strip()
@@ -84,11 +75,9 @@ class ArduinoController:
             return None
 
     def read_temperature(self):
-        """Read temperature from ESP32 using 'TEMP' command"""
         response = self.send_command("TEMP")
         if response:
             try:
-                # Extracts numeric value if response format includes text or direct float
                 for token in response.split():
                     try:
                         return float(token)
