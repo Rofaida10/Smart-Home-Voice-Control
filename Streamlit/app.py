@@ -85,14 +85,15 @@ if "cmd_last_result" not in st.session_state:
 @st.cache_resource
 def load_ml_models():
     models = {'speaker': None, 'command': None}
-    speaker_path = MODELS_DIR / "ML/Model/artifacts/command_model.joblib"
+    
+    speaker_path = MODELS_DIR / "speaker_model.joblib"
     if speaker_path.exists():
         try:
             models['speaker'] = joblib.load(speaker_path)
         except Exception as e:
             print(f"Error loading speaker model: {e}")
 
-    command_path = MODELS_DIR / "ML/Model/artifacts/speaker_model.joblib"
+    command_path = MODELS_DIR / "command_model.joblib"
     if command_path.exists():
         try:
             models['command'] = joblib.load(command_path)
@@ -122,6 +123,9 @@ def authenticate_user(audio_path):
 
 def process_voice_command(audio_path):
     features = extract_features(audio_path)
+    if features is None:
+        return "Unknown", "Unknown"
+
     features_reshaped = features.reshape(1, -1)
 
     speaker_name = "Unknown"
@@ -181,7 +185,6 @@ if st.session_state.current_page == "login":
 
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
-        # Streamlit container with styling wrapper
         with st.container():
             st.markdown(
                 f'<div class="card-heading">{ICON_LOCK}<span>Secure Login</span></div>'
@@ -233,7 +236,7 @@ else:
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col3:
         if st.button("Logout", use_container_width=True):
             st.session_state.authenticated = False
@@ -269,12 +272,12 @@ else:
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    if command != "Unknown":
+                    if command and command != "Unknown":
                         st.session_state.cmd_status = "success"
                         st.session_state.cmd_last_result = {"speaker": speaker, "command": command}
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = command.upper()
+                            arduino_cmd = str(command).upper()
                             if arduino_cmd in ["LIGHT_ON", "LIGHT_OFF", "MUSIC_ON", "MUSIC_OFF"]:
                                 response = st.session_state.arduino.send_command(arduino_cmd)
                                 if response:
