@@ -168,7 +168,7 @@ def _load_single_model(path: Path):
             k in artifact for k in ("model", "scaler", "label_encoder")
         ):
             return None, (
-                f"{path.name} loaded but has an unexpected format "
+                f"{path.name} loaded but has an unexpected format"
                 f"(expected a dict with 'model', 'scaler', 'label_encoder')."
             )
         return artifact, None
@@ -224,7 +224,7 @@ def render_diagnostics():
 # ---------------------------------------------------------------------------
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
-    expected_password = "esp32"
+    expected_password = "esp 32"
     if expected_password == text and text != "":
         st.session_state.authenticated = True
         st.session_state.unlocked = True
