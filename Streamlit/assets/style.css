@@ -38,7 +38,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     height: 40vw;
     top: -10%;
     right: -10%;
-    background: #8b5cf6;
+    background: #f97316;
     animation: floatA 20s ease-in-out infinite alternate;
 }
 
@@ -47,7 +47,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     height: 30vw;
     bottom: -10%;
     left: -10%;
-    background: #06b6d4;
+    background: #6b7280;
     animation: floatB 25s ease-in-out infinite alternate;
 }
 
@@ -89,7 +89,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: #10b981;
+    background: #f97316;
     animation: pulse-dot 2s ease-in-out infinite;
 }
 
@@ -103,7 +103,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     font-size: clamp(2.6rem, 8vw, 5rem);
     font-weight: 700;
     letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #fdba74 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-align: center;
@@ -144,7 +144,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 .card-heading .icon {
     width: 1.6rem;
     height: 1.6rem;
-    stroke: #8b5cf6;
+    stroke: #f97316;
 }
 
 .card-sub {
@@ -160,7 +160,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 .mic-wrap .stButton button {
     width: 100%;
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+    background: linear-gradient(135deg, #f97316, #9a3412) !important;
     color: white !important;
     border: none !important;
     border-radius: 16px !important;
@@ -172,7 +172,41 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 .mic-wrap .stButton button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.4);
+}
+
+/* Native audio recorder widget (used for the passphrase / voice command) -
+   restyled so it reads as a real input, not an empty box. Function untouched. */
+[data-testid="stAudioInput"] {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(249, 115, 22, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 6px 10px !important;
+    transition: all 0.25s ease;
+}
+
+[data-testid="stAudioInput"]:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(249, 115, 22, 0.55) !important;
+}
+
+[data-testid="stAudioInput"] button {
+    color: #f97316 !important;
+}
+
+[data-testid="stAudioInput"] svg {
+    fill: #f97316 !important;
+    stroke: #f97316 !important;
+}
+
+[data-testid="stAudioInputWaveSurfer"],
+[data-testid="stAudioInput"] canvas {
+    filter: hue-rotate(200deg) saturate(1.4);
+}
+
+[data-testid="stWidgetLabel"] p {
+    color: rgba(255, 255, 255, 0.55) !important;
+    font-size: 0.85rem !important;
 }
 
 /* Waveform animation */
@@ -188,7 +222,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 .waveform span {
     display: inline-block;
     width: 4px;
-    background: #8b5cf6;
+    background: #f97316;
     border-radius: 4px;
     animation: wave 1.2s ease-in-out infinite;
 }
@@ -224,7 +258,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 }
 
 .status-dot.listening {
-    background: #8b5cf6;
+    background: #f97316;
     animation: pulse-dot 1s ease-in-out infinite;
 }
 
@@ -270,7 +304,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 /* Streamlit overrides */
 .stButton button {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+    background: linear-gradient(135deg, #f97316, #9a3412) !important;
     color: white !important;
     border: none !important;
     border-radius: 12px !important;
@@ -281,7 +315,7 @@ html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
 
 .stButton button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
+    box-shadow: 0 8px 25px rgba(249, 115, 22, 0.35);
 }
 
 div[data-testid="column"] .stButton button {
