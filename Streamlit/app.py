@@ -224,7 +224,7 @@ def render_diagnostics():
 # ---------------------------------------------------------------------------
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
-    expected_password = "2"
+    expected_password = "two"
     if expected_password == text and text != "":
         st.session_state.authenticated = True
         st.session_state.unlocked = True
