@@ -144,7 +144,8 @@ def process_voice_command(audio_path):
         try:
             X = command_artifact['scaler'].transform(features_reshaped)
             pred_idx = command_artifact['model'].predict(X)
-            command_text = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+            raw_command = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
+            command_text = str(raw_command).strip()
         except Exception as e:
             print(f"Command prediction error: {e}")
 
@@ -236,7 +237,7 @@ else:
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns([1, 1.2, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col3:
         if st.button("Logout", use_container_width=True):
             st.session_state.authenticated = False
@@ -272,12 +273,12 @@ else:
                     if os.path.exists(audio_path):
                         os.remove(audio_path)
 
-                    if command and command != "Unknown":
+                    if command and str(command).lower() != "unknown":
                         st.session_state.cmd_status = "success"
                         st.session_state.cmd_last_result = {"speaker": speaker, "command": command}
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = str(command).upper()
+                            arduino_cmd = str(command).strip().upper()
                             if arduino_cmd in ["LIGHT_ON", "LIGHT_OFF", "MUSIC_ON", "MUSIC_OFF"]:
                                 response = st.session_state.arduino.send_command(arduino_cmd)
                                 if response:
