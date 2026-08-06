@@ -1,108 +1,242 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
-/* Dynamic Background setup using home.png with backdrop blur overlay */
-.stApp {
-    background: url('https://raw.githubusercontent.com/Rofaida10/Smart-Home-Voice-Control/main/Streamlit/assets/home.png') no-repeat center center fixed !important;
-    background-size: cover !important;
+html, body, [class^="st-"], [class*=" st-"], .stApp, .stApp * {
     font-family: 'Poppins', sans-serif !important;
 }
 
-/* Semi-transparent overlay to ensure text contrast over background */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== BACKGROUND WITH OVERLAY ===== */
+.stApp {
+    position: relative;
+    background: __BG_IMAGE__ no-repeat center center/cover !important;
+    background-attachment: fixed !important;
+}
+
+/* Dark overlay layer to improve text readability */
 .stApp::before {
-    content: "";
+    content: '';
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(15, 17, 21, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65); /* ← Adjust opacity here (0.5-0.8) */
+    backdrop-filter: blur(2px); /* ← Optional blur for extra readability */
     z-index: 0;
     pointer-events: none;
 }
 
-/* Ensure content stays above the background overlay */
-.main .block-container {
+/* Ensure all content sits above the overlay */
+.stApp > * {
     position: relative;
     z-index: 1;
-    max-width: 900px;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
 }
 
-/* Typography Overrides */
-html, body, [class*="css"], h1, h2, h3, h4, h5, h6, p, label, div, span, button {
-    font-family: 'Poppins', sans-serif !important;
-    color: #F3F4F6 !important;
+/* ===== ORBS (above overlay) ===== */
+.orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.12;
+    z-index: 0;
+    pointer-events: none;
 }
 
-h1, h2, h3 {
+.orb-a {
+    width: 40vw;
+    height: 40vw;
+    top: -10%;
+    right: -10%;
+    background: #f97316;
+    animation: floatA 20s ease-in-out infinite alternate;
+}
+
+.orb-b {
+    width: 30vw;
+    height: 30vw;
+    bottom: -10%;
+    left: -10%;
+    background: #6b7280;
+    animation: floatB 25s ease-in-out infinite alternate;
+}
+
+@keyframes floatA {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-80px, 60px) scale(1.2); }
+}
+
+@keyframes floatB {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(80px, -60px) scale(1.1); }
+}
+
+/* ===== HEADER ===== */
+.header-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.eyebrow-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 100px;
+    padding: 0.4rem 1.2rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: #f97316;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* Title with text-shadow for readability */
+.title {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 0%, #fdba74 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    text-shadow: 0 0 40px rgba(0,0,0,0.5); /* ← Adds glow for readability */
+}
+
+.subtitle {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    margin-top: 0.4rem;
+    font-weight: 400;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+}
+
+/* ===== GLASS CARDS (more opaque for readability) ===== */
+div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column"] > div[data-testid="stVerticalBlock"] {
+    background: rgba(0, 0, 0, 0.5) !important; /* ← Darker background */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== CARD CONTENT ===== */
+.card-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+}
+
+.card-heading .icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    color: #f97316;
+}
+
+.card-sub {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 1.5rem 0 0.8rem 0;
+}
+
+/* ===== AUDIO INPUT ===== */
+[data-testid="stAudioInput"] {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(249, 115, 22, 0.4) !important;
+    border-radius: 16px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+}
+
+[data-testid="stAudioInput"]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(249, 115, 22, 0.7) !important;
+}
+
+[data-testid="stAudioInput"] button {
+    color: #f97316 !important;
+}
+
+[data-testid="stAudioInput"] svg {
+    fill: #f97316 !important;
+    stroke: #f97316 !important;
+}
+
+/* ===== BUTTONS ===== */
+.stButton button {
+    background: linear-gradient(135deg, #f97316, #ea580c) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 12px 20px !important;
     font-weight: 600 !important;
-    letter-spacing: -0.5px;
-    color: #FFFFFF !important;
-}
-
-p, span, label {
-    color: #D1D5DB !important;
-}
-
-/* Remove empty rounded containers/rectangles in login and dashboard */
-.stAudio, 
-div[data-testid="stAudio"],
-div:empty,
-.element-container:has(iframe[height="0"]),
-div[data-testid="stVerticalBlock"] > div:empty {
-    display: none !important;
-}
-
-/* Custom Glass Cards for Content & Dashboard Units */
-div[data-testid="stMetric"],
-div[data-testid="stForm"],
-.stCard {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
-    padding: 1.25rem !important;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-}
-
-/* Buttons Neutral Professional Styling (No Blues/Purples) */
-.stButton > button {
-    background: #27272A !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 8px !important;
-    font-weight: 500 !important;
     font-size: 0.95rem !important;
-    padding: 0.6rem 1.2rem !important;
-    transition: all 0.2s ease-in-out !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
 }
 
-.stButton > button:hover {
-    background: #3F3F46 !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+.stButton button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(249, 115, 22, 0.5);
 }
 
-/* Clean Input Fields */
-.stTextInput > div > div > input {
-    background: rgba(24, 24, 27, 0.7) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 8px !important;
-    color: #FFFFFF !important;
-    font-family: 'Poppins', sans-serif !important;
+/* ===== METRICS ===== */
+div[data-testid="metric-container"] {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 1rem;
 }
 
-.stTextInput > div > div > input:focus {
-    border-color: #A1A1AA !important;
-    box-shadow: 0 0 0 1px #A1A1AA !important;
+/* ===== FOOTNOTE ===== */
+.footnote {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    letter-spacing: 0.02em;
 }
-
-/* Hide Streamlit Default Headers and Footers */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
