@@ -122,14 +122,9 @@ def load_ml_models():
             print(models["command"].keys())
         except Exception as e:
             print("Command loading failed:", e)
-    st.write("MODELS_DIR =", MODELS_DIR)
-    st.write("Speaker exists:", speaker_path.exists())
-    st.write("Command exists:", command_path.exists())
 
     return models
 
-st.write("Current working directory:", os.getcwd())
-st.write("sys.path:")
 
 for p in sys.path:
     st.write(p)
