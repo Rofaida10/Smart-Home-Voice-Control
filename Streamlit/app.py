@@ -3,13 +3,15 @@ import os
 from pathlib import Path
 import sys
 import time
-
 import joblib
-import numpy as np
 import streamlit as st
 from utils.arduino_utils import ArduinoController
 from utils.audio_utils import extract_features, save_recorded_audio
 from utils.stt_utils import transcribe_audio
+
+
+
+
 
 st.set_page_config(
     page_title="Smart Home",
@@ -20,7 +22,11 @@ st.set_page_config(
 
 # Paths configuration
 ASSETS = Path(__file__).parent / "assets"
-MODELS_DIR = Path(__file__).parent.parent / "ML" / "Model" / "artifacts"
+BASE_DIR = Path(__file__).parent.parent
+MODELS_DIR = BASE_DIR / "ML" / "Model" / "artifacts"
+
+sys.path.append(str(BASE_DIR / "ML"))
+sys.path.append(str(BASE_DIR / "ML" / "Model"))
 MUSIC_FILE = Path(__file__).parent / "audio" / "music.mp3"
 
 # Inline SVG icons
@@ -56,7 +62,7 @@ else:
 
 css_path = ASSETS / "style.css"
 if css_path.exists():
-    css = css_path.read_text().replace("__BG_IMAGE__", bg_css)
+    css = css_path.read_text(encoding="utf-8").replace("__BG_IMAGE__", bg_css)
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 # Session state initialization
@@ -87,27 +93,53 @@ if "play_music" not in st.session_state:
 
 @st.cache_resource
 def load_ml_models():
-    models = {'speaker': None, 'command': None}
-    
+    models = {"speaker": None, "command": None}
+
+    print("=" * 50)
+    print("Loading ML Models...")
+
     speaker_path = MODELS_DIR / "speaker_model.joblib"
+    command_path = MODELS_DIR / "command_model.joblib"
+
+    print("Speaker path:", speaker_path)
+    print("Speaker exists:", speaker_path.exists())
+
+    print("Command path:", command_path)
+    print("Command exists:", command_path.exists())
+
     if speaker_path.exists():
         try:
-            models['speaker'] = joblib.load(speaker_path)
+            models["speaker"] = joblib.load(speaker_path)
+            print("✅ Speaker model loaded.")
+            print(models["speaker"].keys())
         except Exception as e:
-            print(f"Error loading speaker model: {e}")
+            print("Speaker loading failed:", e)
 
-    command_path = MODELS_DIR / "command_model.joblib"
     if command_path.exists():
         try:
-            models['command'] = joblib.load(command_path)
+            models["command"] = joblib.load(command_path)
+            print("✅ Command model loaded.")
+            print(models["command"].keys())
         except Exception as e:
-            print(f"Error loading command model: {e}")
+            print("Command loading failed:", e)
+    st.write("MODELS_DIR =", MODELS_DIR)
+    st.write("Speaker exists:", speaker_path.exists())
+    st.write("Command exists:", command_path.exists())
 
     return models
 
+st.write("Current working directory:", os.getcwd())
+st.write("sys.path:")
+
+for p in sys.path:
+    st.write(p)
 
 ml_models = load_ml_models()
 
+st.sidebar.write("## Debug")
+
+st.sidebar.write("Speaker loaded:", ml_models["speaker"] is not None)
+st.sidebar.write("Command loaded:", ml_models["command"] is not None)
 
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
@@ -122,9 +154,14 @@ def authenticate_user(audio_path):
         st.session_state.password_attempts += 1
         return False, text
 
-
+#here the command model should work
 def process_voice_command(audio_path):
     features = extract_features(audio_path)
+    print("=" * 50)
+    print("Feature shape:", features.shape)
+    print("First 10 values:")
+    print(features[:10])
+
     if features is None:
         return "Unknown", "Unknown"
 
@@ -136,6 +173,7 @@ def process_voice_command(audio_path):
         try:
             X = speaker_artifact['scaler'].transform(features_reshaped)
             pred_idx = speaker_artifact['model'].predict(X)
+
             speaker_name = speaker_artifact['label_encoder'].inverse_transform(pred_idx)[0]
         except Exception as e:
             print(f"Speaker prediction error: {e}")
@@ -146,6 +184,17 @@ def process_voice_command(audio_path):
         try:
             X = command_artifact['scaler'].transform(features_reshaped)
             pred_idx = command_artifact['model'].predict(X)
+            print("Predicted index:", pred_idx)
+
+            print(
+                "Classes:",
+                command_artifact["label_encoder"].classes_
+            )
+
+            print(
+                "Prediction:",
+                command_artifact["label_encoder"].inverse_transform(pred_idx)
+            )
             command_text = command_artifact['label_encoder'].inverse_transform(pred_idx)[0]
         except Exception as e:
             print(f"Command prediction error: {e}")
@@ -283,7 +332,7 @@ else:
                         display_cmd = clean_cmd.replace("_", " ").upper()
                         st.session_state.cmd_status = "success"
                         st.session_state.cmd_last_result = {
-                            "speaker": speaker, 
+                            "speaker": speaker,
                             "command": display_cmd,
                             "raw_detected": clean_cmd
                         }
@@ -300,13 +349,14 @@ else:
                     else:
                         st.session_state.cmd_status = "failed"
                         st.session_state.cmd_last_result = {
-                            "speaker": speaker, 
+                            "speaker": speaker,
                             "raw_detected": raw_command if raw_command != "Unknown" else "Unrecognized Audio / Noise",
                             "command": "Unrecognized Command"
                         }
                 else:
                     st.session_state.cmd_status = "failed"
-                    st.session_state.cmd_last_result = {"speaker": "None", "raw_detected": "Audio Recording Error", "command": "Recording Error / Silent"}
+                    st.session_state.cmd_last_result = {"speaker": "None", "raw_detected": "Audio Recording Error",
+                                                        "command": "Recording Error / Silent"}
 
             if st.session_state.get("cmd_status") == "success":
                 res = st.session_state.cmd_last_result
@@ -341,7 +391,7 @@ else:
                         st.success("Lights turned ON")
                     else:
                         st.warning("Arduino not connected")
-                    
+
                 if st.button("Music OFF", use_container_width=True):
                     st.session_state.play_music = False
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
@@ -384,6 +434,7 @@ else:
                         st.warning("No data received from sensor")
                 else:
                     import random
+
                     temp = random.uniform(20, 35)
                     st.metric("Temperature (Simulated)", f"{temp:.1f}°C")
                     st.info("Arduino not connected")
