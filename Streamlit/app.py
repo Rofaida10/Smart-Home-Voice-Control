@@ -126,15 +126,9 @@ def load_ml_models():
     return models
 
 
-for p in sys.path:
-    st.write(p)
 
 ml_models = load_ml_models()
 
-st.sidebar.write("## Debug")
-
-st.sidebar.write("Speaker loaded:", ml_models["speaker"] is not None)
-st.sidebar.write("Command loaded:", ml_models["command"] is not None)
 
 def authenticate_user(audio_path):
     text = transcribe_audio(audio_path)
