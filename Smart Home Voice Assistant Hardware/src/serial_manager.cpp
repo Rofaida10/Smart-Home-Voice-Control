@@ -5,6 +5,7 @@
 #include "config.h"
 
 #include <Arduino.h>
+#include <cmath>
 #include <cstring>
 
 // ---------------------------------------------------------------------------
@@ -18,7 +19,8 @@ SerialManager::SerialManager(const Config &cfg)
     , m_sensor(nullptr)
     , m_bufferPos(0)
     , m_commandReady(false)
-    , m_authenticated(false) {
+    , m_authenticated(false)
+    , m_lastTempValue(NAN) {
 
     m_cmd.type = CommandType::UNKNOWN;
     m_cmd.argument1[0] = '\0';
@@ -38,15 +40,48 @@ void SerialManager::update() {
 
     if (m_commandReady) {
         m_commandReady = false;
-        m_buffer[m_bufferPos] = '\0';
-
-        toUpper();
-        parseCommand();
-        executeCommand();
-
-        m_bufferPos = 0;
-        m_buffer[0] = '\0';
+        processBuffer();
     }
+}
+
+// ---------------------------------------------------------------------------
+// Shared command entry point  (UART and Supabase both funnel through here)
+// ---------------------------------------------------------------------------
+
+void SerialManager::executeLine(const String &line) {
+    size_t len = line.length();
+    if (len == 0) return;
+    if (len > BUFFER_SIZE - 1) len = BUFFER_SIZE - 1;
+
+    memcpy(m_buffer, line.c_str(), len);
+    m_buffer[len] = '\0';
+    m_bufferPos = len;
+
+    processBuffer();
+}
+
+// ---------------------------------------------------------------------------
+// Parse + dispatch whatever is currently in the line buffer.
+// ---------------------------------------------------------------------------
+
+void SerialManager::processBuffer() {
+    m_buffer[m_bufferPos] = '\0';
+
+    trimBuffer();   // strip trailing spaces/tabs before processing
+    toUpper();
+    parseCommand();
+    executeCommand();
+
+    m_bufferPos = 0;
+    m_buffer[0] = '\0';
+}
+
+// ---------------------------------------------------------------------------
+// Temperature from the most recent TEMP read  (NaN when none)
+// ---------------------------------------------------------------------------
+
+float SerialManager::getLastTemperature() {
+    return m_lastTempValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -78,6 +113,20 @@ void SerialManager::readSerial() {
             m_buffer[m_bufferPos++] = c;
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Trim trailing spaces / tabs / carriage returns from the received line.
+// ---------------------------------------------------------------------------
+
+void SerialManager::trimBuffer() {
+    while (m_bufferPos > 0 &&
+           (m_buffer[m_bufferPos - 1] == ' ' ||
+            m_buffer[m_bufferPos - 1] == '\t' ||
+            m_buffer[m_bufferPos - 1] == '\r')) {
+        --m_bufferPos;
+    }
+    m_buffer[m_bufferPos] = '\0';
 }
 
 // ---------------------------------------------------------------------------
@@ -113,13 +162,21 @@ void SerialManager::parseCommand() {
     while (*p != '\0' && *p != ' ') ++p;
     size_t const cmdLen = static_cast<size_t>(p - cmdStart);
 
-    // --- match command (all uppercase after toUpper()) ----------------------
+    // --- single-token commands (Streamlit protocol, all uppercase) ----------
 
-    if      (cmdLen == 4  && strncmp(cmdStart, "AUTH",  4) == 0) m_cmd.type = CommandType::AUTH;
-    else if (cmdLen == 5  && strncmp(cmdStart, "LIGHT", 5) == 0) m_cmd.type = CommandType::LIGHT;
-    else if (cmdLen == 5  && strncmp(cmdStart, "MUSIC", 5) == 0) m_cmd.type = CommandType::MUSIC;
-    else if (cmdLen == 4  && strncmp(cmdStart, "TEMP",  4) == 0) m_cmd.type = CommandType::TEMP;
-    else if (cmdLen == 6  && strncmp(cmdStart, "STATUS",6) == 0) m_cmd.type = CommandType::STATUS;
+    if      (cmdLen == 8 && strncmp(cmdStart, "LIGHT_ON",  8) == 0) { m_cmd.type = CommandType::LIGHT; strcpy(m_cmd.argument1, "ON");  return; }
+    else if (cmdLen == 9 && strncmp(cmdStart, "LIGHT_OFF", 9) == 0) { m_cmd.type = CommandType::LIGHT; strcpy(m_cmd.argument1, "OFF"); return; }
+    else if (cmdLen == 8 && strncmp(cmdStart, "MUSIC_ON",  8) == 0) { m_cmd.type = CommandType::MUSIC; strcpy(m_cmd.argument1, "ON");  return; }
+    else if (cmdLen == 9 && strncmp(cmdStart, "MUSIC_OFF", 9) == 0) { m_cmd.type = CommandType::MUSIC; strcpy(m_cmd.argument1, "OFF"); return; }
+    else if (cmdLen == 4 && strncmp(cmdStart, "TEMP",      4) == 0) { m_cmd.type = CommandType::TEMP;   return; }
+    else if (cmdLen == 6 && strncmp(cmdStart, "STATUS",    6) == 0) { m_cmd.type = CommandType::STATUS; return; }
+
+    // --- legacy space-delimited commands ------------------------------------
+
+    if      (cmdLen == 4 && strncmp(cmdStart, "AUTH",  4) == 0) m_cmd.type = CommandType::AUTH;
+    else if (cmdLen == 5 && strncmp(cmdStart, "LIGHT", 5) == 0) m_cmd.type = CommandType::LIGHT;
+    else if (cmdLen == 5 && strncmp(cmdStart, "MUSIC", 5) == 0) m_cmd.type = CommandType::MUSIC;
+    else return;   // unknown command → ignored safely
 
     // --- skip spaces to argument 1 ------------------------------------------
 
@@ -149,19 +206,13 @@ void SerialManager::parseCommand() {
 // ===========================================================================
 
 void SerialManager::executeCommand() {
-    // All commands except AUTH require prior authentication.
-    if (m_cmd.type != CommandType::AUTH && !m_authenticated) {
-        sendError("NOT_AUTHENTICATED");
-        return;
-    }
-
     switch (m_cmd.type) {
-        case CommandType::AUTH:    handleAuth();          break;
-        case CommandType::LIGHT:   handleLight();         break;
-        case CommandType::MUSIC:   handleMusic();         break;
-        case CommandType::TEMP:    sendTemperature();     break;
-        case CommandType::STATUS:  sendStatus();          break;
-        default:                   sendError("UNKNOWN_COMMAND"); break;
+        case CommandType::AUTH:   handleAuth();      break;
+        case CommandType::LIGHT:  handleLight();     break;
+        case CommandType::MUSIC:  handleMusic();     break;
+        case CommandType::TEMP:   sendTemperature(); break;
+        case CommandType::STATUS: sendStatus();      break;
+        default:                  break;   // unknown command → safely ignored
     }
 }
 
@@ -178,20 +229,14 @@ void SerialManager::sendError(const char *msg) {
 }
 
 // ---------------------------------------------------------------------------
-// TEMP  —  "TEMP <temp> <hum>" or "TEMP_ERROR"
+// TEMP  —  reply with ONLY the temperature value as a float (Streamlit format)
 // ---------------------------------------------------------------------------
 
 void SerialManager::sendTemperature() {
-    if (m_sensor == nullptr || !m_sensor->hasValidReading()) {
-        sendError("TEMP_ERROR");
-        return;
-    }
+    if (m_sensor == nullptr) return;
 
-    char buf[32];
-    snprintf(buf, sizeof(buf), "TEMP %.1f %.1f",
-             m_sensor->getTemperature(),
-             m_sensor->getHumidity());
-    Serial.println(buf);
+    m_lastTempValue = m_sensor->readNow();
+    Serial.println(m_lastTempValue);
 }
 
 // ---------------------------------------------------------------------------
@@ -274,21 +319,25 @@ void SerialManager::handleLight() {
 }
 
 // ---------------------------------------------------------------------------
-// MUSIC PLAY | STOP
+// MUSIC ON | OFF   (legacy MUSIC PLAY | STOP also accepted)
 // ---------------------------------------------------------------------------
 
 void SerialManager::handleMusic() {
-    if (m_light == nullptr) {
+    if (m_light == nullptr && m_buzzer == nullptr) {
         sendError("MUSIC_ERROR");
         return;
     }
 
-    if (strcmp(m_cmd.argument1, "PLAY") == 0) {
-        m_light->musicOn();
-        sendOK("MUSIC_PLAYING");
-    } else if (strcmp(m_cmd.argument1, "STOP") == 0) {
-        m_light->musicOff();
-        sendOK("MUSIC_STOPPED");
+    if (strcmp(m_cmd.argument1, "ON") == 0 ||
+        strcmp(m_cmd.argument1, "PLAY") == 0) {
+        if (m_light  != nullptr) m_light->musicOn();
+        if (m_buzzer != nullptr) m_buzzer->on();
+        sendOK("MUSIC_ON");
+    } else if (strcmp(m_cmd.argument1, "OFF") == 0 ||
+               strcmp(m_cmd.argument1, "STOP") == 0) {
+        if (m_light  != nullptr) m_light->musicOff();
+        if (m_buzzer != nullptr) m_buzzer->off();
+        sendOK("MUSIC_OFF");
     } else {
         sendError("UNKNOWN_ARGUMENT");
     }

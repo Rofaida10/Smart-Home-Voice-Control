@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <WString.h>
+
 class LightController;
 class Buzzer;
 class DHTSensor;
@@ -27,6 +29,16 @@ public:
      *         Non-blocking — call every iteration of loop().
      */
     void update();
+
+    /**
+     * @brief  Execute a command line exactly as if it had arrived over the
+     *         UART.  Shared entry point used by the USB Serial path and the
+     *         Supabase poller, so every command path behaves identically.
+     */
+    void executeLine(const String &line);
+
+    /** @return The temperature from the most recent TEMP read (°C), or NaN. */
+    float getLastTemperature();
 
     // -- Subsystem injection (set before loop() begins) -------------------
 
@@ -67,12 +79,19 @@ private:
     size_t  m_bufferPos;
     bool    m_commandReady;
     bool    m_authenticated;
+    float   m_lastTempValue;
     Command m_cmd;
 
     // -- Serial I/O -------------------------------------------------------
 
     /** Read bytes from UART into the line buffer until '\n'. */
     void readSerial();
+
+    /** Parse + dispatch whatever is currently in the line buffer. */
+    void processBuffer();
+
+    /** Strip trailing spaces / tabs / carriage returns from the received line. */
+    void trimBuffer();
 
     /** Convert the entire line buffer to uppercase for case-insensitive matching. */
     void toUpper();

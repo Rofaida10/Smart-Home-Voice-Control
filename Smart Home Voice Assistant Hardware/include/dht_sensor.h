@@ -29,6 +29,14 @@ public:
      */
     void update();
 
+    /**
+     * @brief  Perform an immediate sensor read and return the temperature.
+     *
+     * Intended for on-demand queries (e.g. the TEMP serial command).  Updates
+     * the cache on success; returns the last cached value (or NaN) on failure.
+     */
+    float readNow();
+
     /** @return The last successfully-read temperature in °C  (or NaN). */
     float getTemperature() const;
 
