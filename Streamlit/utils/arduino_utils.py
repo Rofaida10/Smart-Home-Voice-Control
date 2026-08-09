@@ -59,6 +59,9 @@ class CommunicationTransport:
     def read_temperature(self):
         raise NotImplementedError
 
+    def get_status(self):
+        raise NotImplementedError
+
     def authenticate(self, password):
         raise NotImplementedError
 
@@ -156,6 +159,44 @@ class SerialTransport(CommunicationTransport):
             return False
         return self.send_command(f"AUTH {password}")
 
+    def get_status(self):
+        """Request the device STATUS and parse the KEY=VALUE response lines.
+
+        Firmware replies (one per line, first line is the literal "STATUS"):
+            AUTH=0|1  LIGHT=0|1  MUSIC=0|1  TEMP=..  HUM=..
+        Returns a dict like {"auth":"1","light":"0","music":"1","temp":"25.3","hum":"42.1"},
+        or None when the device is unreachable / the reply cannot be parsed.
+        """
+        if not self.connected or not self.serial:
+            return None
+
+        try:
+            with self.lock:
+                self.serial.reset_input_buffer()
+                self.serial.write(b"STATUS\n")
+                time.sleep(0.3)
+
+                pairs = {}
+                deadline = time.time() + self.timeout
+                while time.time() < deadline:
+                    if self.serial.in_waiting > 0:
+                        line = self.serial.readline().decode('utf-8', errors='replace').strip()
+                        if "=" in line:
+                            key, _, value = line.partition("=")
+                            pairs[key] = value
+                            if len(pairs) >= 5:
+                                break
+                    else:
+                        time.sleep(0.05)
+
+                if not pairs:
+                    return None
+                print(f"Device status: {pairs}")
+                return pairs
+        except Exception as e:
+            print(f"Status read error: {str(e)}")
+            return None
+
     @property
     def is_connected(self):
         return self.connected and self.serial and self.serial.is_open
@@ -238,6 +279,10 @@ class SupabaseTransport(CommunicationTransport):
     def authenticate(self, password):
         """Authentication logic not implemented yet — placeholder."""
         return True
+
+    def get_status(self):
+        """No device-state reporting via Supabase yet — returns None."""
+        return None
 
     def send_command(self, command):
         """Insert a pending command row into the Supabase commands table."""
@@ -347,6 +392,10 @@ class ArduinoController:
     def read_temperature(self):
         """Request the temperature. Returns a float, or None on failure."""
         return self._transport.read_temperature()
+
+    def get_status(self):
+        """Request the device state. Returns a dict of KEY=VALUE pairs, or None."""
+        return self._transport.get_status()
 
     def authenticate(self, password):
         """Authenticate with the given password."""

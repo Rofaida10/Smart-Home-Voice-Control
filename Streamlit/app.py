@@ -56,7 +56,7 @@ ICON_TEMP = """
 # Load styles
 css_path = ASSETS / "style.css"
 if css_path.exists():
-    css = css_path.read_text().replace("__BG_IMAGE__", bg_css)
+    css = css_path.read_text()
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 # Session state initialization
@@ -81,6 +81,12 @@ if "cmd_status" not in st.session_state:
     st.session_state.cmd_status = None
 if "cmd_last_result" not in st.session_state:
     st.session_state.cmd_last_result = {}
+if "device_states" not in st.session_state:
+    st.session_state.device_states = {"light": "OFF", "music": "OFF"}
+if "temp_reading" not in st.session_state:
+    st.session_state.temp_reading = None
+if "play_music" not in st.session_state:
+    st.session_state.play_music = False
 
 
 @st.cache_resource
@@ -186,6 +192,7 @@ def init_arduino():
             if arduino.connect():
                 arduino.authenticate("esp32")
                 st.session_state.arduino = arduino
+                sync_device_state()
                 return True
             else:
                 st.warning("ESP32 Connection failed.")
@@ -200,6 +207,7 @@ def init_arduino():
 def temp_sensor_panel():
     connected = bool(st.session_state.arduino and st.session_state.arduino.is_connected)
     now = datetime.now()
+    sync_device_state()
 
     if connected:
         try:
@@ -243,6 +251,27 @@ def connection_chip():
 
 def set_device_state(device, state):
     st.session_state.device_states[device] = state
+
+
+def sync_device_state():
+    """Poll the device STATUS and mirror the real LED state into the chips."""
+    arduino = st.session_state.arduino
+    if arduino and arduino.is_connected:
+        status = arduino.get_status()
+        if status:
+            st.session_state.device_states["light"] = "ON" if status.get("light") == "1" else "OFF"
+            st.session_state.device_states["music"] = "ON" if status.get("music") == "1" else "OFF"
+            temp = status.get("temp")
+            if temp not in (None, "--", ""):
+                try:
+                    st.session_state.temp_reading = {
+                        "value": float(temp),
+                        "time": datetime.now(),
+                        "source": "sensor",
+                    }
+                except ValueError:
+                    pass
+    return st.session_state.device_states
 
 
 # Main UI Structure
@@ -375,11 +404,12 @@ else:
                             st.session_state.play_music = False
 
                         if st.session_state.arduino and st.session_state.arduino.is_connected:
-                            arduino_cmd = command.upper()
+                            arduino_cmd = clean_cmd.upper()
                             if arduino_cmd in ["LIGHT_ON", "LIGHT_OFF", "MUSIC_ON", "MUSIC_OFF"]:
                                 response = st.session_state.arduino.send_command(arduino_cmd)
                                 if response:
                                     st.session_state.cmd_last_result["arduino_response"] = response
+                        sync_device_state()
                     else:
                         st.session_state.cmd_status = "failed"
                         st.session_state.cmd_last_result = {
@@ -422,6 +452,7 @@ else:
                 if st.button("Light ON", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("LIGHT_ON")
+                        sync_device_state()
                         st.success("Lights turned ON")
                     else:
                         st.warning("Arduino not connected")
@@ -430,6 +461,7 @@ else:
                     st.session_state.play_music = False
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("MUSIC_OFF")
+                        sync_device_state()
                         st.success("Music turned OFF")
                     else:
                         st.warning("Arduino not connected")
@@ -439,6 +471,7 @@ else:
                 if st.button("Light OFF", use_container_width=True):
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("LIGHT_OFF")
+                        sync_device_state()
                         st.success("Lights turned OFF")
                     else:
                         st.warning("Arduino not connected")
@@ -447,6 +480,7 @@ else:
                     st.session_state.play_music = True
                     if st.session_state.arduino and st.session_state.arduino.is_connected:
                         st.session_state.arduino.send_command("MUSIC_ON")
+                        sync_device_state()
                         st.success("Music turned ON")
                     else:
                         st.warning("Arduino not connected")
