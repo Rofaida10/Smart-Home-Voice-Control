@@ -3,6 +3,9 @@
 .pioenvs/
 .piolibdeps/
 
+# Local secrets (real credentials — never commit)
+include/secrets.h
+
 # Build artifacts
 __pycache__/
 *.pyc
