@@ -41,7 +41,7 @@ public:
 private:
     bool pollCommand();
     bool markProcessed(const char *rowId);
-    bool postTemperature(float temperature);
+    bool postTelemetry();
     void uploadTelemetry(unsigned long now);
 
     bool ensureClient();

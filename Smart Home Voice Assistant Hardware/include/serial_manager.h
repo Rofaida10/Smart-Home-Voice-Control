@@ -40,6 +40,15 @@ public:
     /** @return The temperature from the most recent TEMP read (°C), or NaN. */
     float getLastTemperature();
 
+    /** @return Whether AUTH succeeded. */
+    bool isAuthenticated() const;
+
+    /** @return Whether the light LED is on (exclusive with music). */
+    bool isLightOn() const;
+
+    /** @return Whether the music LED is on (exclusive with light). */
+    bool isMusicOn() const;
+
     // -- Subsystem injection (set before loop() begins) -------------------
 
     void setLightController(LightController *ctrl);

@@ -203,7 +203,20 @@ def init_arduino():
     return True
 
 
-@st.fragment(run_every=300)
+@st.fragment(run_every=5)
+def device_status_panel():
+    """Live device chips. Runs on its own 5 s timer so the UI always shows
+    the real hardware state (works for Serial AND Supabase/cloud mode)."""
+    sync_device_state()
+    st.markdown(
+        f'<div class="chip-row">{device_chip("Light", st.session_state.device_states["light"])}'
+        f'{device_chip("Music", st.session_state.device_states["music"])}'
+        f'{connection_chip()}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+@st.fragment(run_every=5)
 def temp_sensor_panel():
     connected = bool(st.session_state.arduino and st.session_state.arduino.is_connected)
     now = datetime.now()
@@ -253,15 +266,25 @@ def set_device_state(device, state):
     st.session_state.device_states[device] = state
 
 
+def _status_flag(value) -> bool:
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
 def sync_device_state():
-    """Poll the device STATUS and mirror the real LED state into the chips."""
+    """Poll the device STATUS and mirror the real LED state into the chips.
+
+    Serial mode returns keys as the firmware prints them (uppercase);
+    Supabase mode returns lowercase JSON keys. Normalise to lowercase so one
+    lookup works for both transports.
+    """
     arduino = st.session_state.arduino
     if arduino and arduino.is_connected:
         status = arduino.get_status()
         if status:
-            st.session_state.device_states["light"] = "ON" if status.get("light") == "1" else "OFF"
-            st.session_state.device_states["music"] = "ON" if status.get("music") == "1" else "OFF"
-            temp = status.get("temp")
+            status = {k.lower(): v for k, v in status.items()}
+            st.session_state.device_states["light"] = "ON" if _status_flag(status.get("light")) else "OFF"
+            st.session_state.device_states["music"] = "ON" if _status_flag(status.get("music")) else "OFF"
+            temp = status.get("temperature", status.get("temp"))
             if temp not in (None, "--", ""):
                 try:
                     st.session_state.temp_reading = {
@@ -269,7 +292,7 @@ def sync_device_state():
                         "time": datetime.now(),
                         "source": "sensor",
                     }
-                except ValueError:
+                except (TypeError, ValueError):
                     pass
     return st.session_state.device_states
 
@@ -365,12 +388,7 @@ else:
                 unsafe_allow_html=True,
             )
 
-            st.markdown(
-                f'<div class="chip-row">{device_chip("Light", st.session_state.device_states["light"])}'
-                f'{device_chip("Music", st.session_state.device_states["music"])}'
-                f'{connection_chip()}</div>',
-                unsafe_allow_html=True,
-            )
+            device_status_panel()
 
             cmd_audio = st.audio_input("Speak your command", key="cmd_audio_input")
 
@@ -493,18 +511,7 @@ else:
                 unsafe_allow_html=True,
             )
 
-            if st.button("Read Temperature", use_container_width=True):
-                if st.session_state.arduino and st.session_state.arduino.is_connected:
-                    temp = st.session_state.arduino.read_temperature()
-                    if temp is not None:
-                        st.metric("Current Temperature", f"{temp:.1f}°C")
-                    else:
-                        st.warning("No data received from sensor")
-                else:
-                    import random
-                    temp = random.uniform(20, 35)
-                    st.metric("Temperature (Simulated)", f"{temp:.1f}°C")
-                    st.info("Arduino not connected")
+            temp_sensor_panel()
 
 st.markdown(
     '<div class="footnote">Protected by on-device voice biometrics</div>',

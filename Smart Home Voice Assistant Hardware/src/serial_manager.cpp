@@ -84,6 +84,10 @@ float SerialManager::getLastTemperature() {
     return m_lastTempValue;
 }
 
+bool SerialManager::isAuthenticated() const { return m_authenticated; }
+bool SerialManager::isLightOn() const { return m_light != nullptr && m_light->isLightOn(); }
+bool SerialManager::isMusicOn() const { return m_light != nullptr && m_light->isMusicOn(); }
+
 // ---------------------------------------------------------------------------
 // Subsystem injection
 // ---------------------------------------------------------------------------
