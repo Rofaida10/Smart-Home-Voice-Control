@@ -30,7 +30,29 @@ from datetime import datetime, timezone
 _SERIAL = "SERIAL"
 _SUPABASE = "SUPABASE"
 
-COMMUNICATION_MODE = os.getenv("COMMUNICATION_MODE", _SERIAL).upper()
+# A telemetry row older than this means the device is offline (REST mode).
+_STALE_AFTER_SECONDS = 60
+
+
+def _detect_mode() -> str:
+    """Choose the transport automatically.
+
+    - COMMUNICATION_MODE env var wins (explicit override).
+    - Otherwise: running on Streamlit Cloud (IS_RUNNING_ON_STREAMLIT_CLOUD)
+      with Supabase credentials configured  -> SUPABASE
+    - Otherwise (local dev)                  -> SERIAL
+    """
+    env_mode = os.getenv("COMMUNICATION_MODE")
+    if env_mode:
+        return env_mode.strip().upper()
+
+    on_cloud = os.getenv("IS_RUNNING_ON_STREAMLIT_CLOUD", "").strip().lower() in ("1", "true", "yes")
+    if on_cloud and os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_KEY"):
+        return _SUPABASE
+    return _SERIAL
+
+
+COMMUNICATION_MODE = _detect_mode()
 if COMMUNICATION_MODE not in (_SERIAL, _SUPABASE):
     raise ValueError(
         f"Invalid COMMUNICATION_MODE '{COMMUNICATION_MODE}'. "
@@ -249,6 +271,16 @@ class SupabaseTransport(CommunicationTransport):
             "Authorization": f"Bearer {self.key}",
         })
         self.connected = False
+        self.last_seen = None  # epoch of the freshest telemetry row from the device
+
+    @staticmethod
+    def _row_age(created_at):
+        """Seconds since a telemetry row was created, or None if unparseable."""
+        try:
+            parsed = datetime.fromisoformat(str(created_at).replace("Z", "+00:00"))
+            return time.time() - parsed.timestamp()
+        except (TypeError, ValueError):
+            return None
 
     def connect(self):
         """Verify Supabase connectivity with a lightweight request."""
@@ -257,6 +289,7 @@ class SupabaseTransport(CommunicationTransport):
             self.connected = (response.status_code == 200)
             if self.connected:
                 print("Connected to Supabase")
+                self.get_status()  # warm device freshness from the latest telemetry row
             else:
                 print(f"Supabase connection error: HTTP {response.status_code}")
             return self.connected
@@ -277,12 +310,58 @@ class SupabaseTransport(CommunicationTransport):
         print("Disconnected from Supabase")
 
     def authenticate(self, password):
-        """Authentication logic not implemented yet — placeholder."""
-        return True
+        """Queue an AUTH command so the device LED/buzzer reacts, like USB mode."""
+        if not password:
+            print("Authentication skipped: empty password")
+            return False
+        return self.send_command(f"AUTH {password}")
 
     def get_status(self):
-        """No device-state reporting via Supabase yet — returns None."""
-        return None
+        """Return the device state from the latest telemetry row.
+
+        The firmware posts light/music/auth/temperature/humidity every
+        SUPABASE_TELEMETRY_INTERVAL_MS (5 s). Keys are lowercase to match
+        the SerialTransport convention consumed by sync_device_state().
+        Also updates `last_seen` so is_connected reflects device freshness.
+        Returns None when unreachable or no telemetry has arrived yet.
+        """
+        if not self.connected or self._session is None:
+            return None
+
+        try:
+            params = {
+                "device_id": f"eq.{self.device_id}",
+                "select": "auth,light,music,temperature,humidity,created_at",
+                "order": "created_at.desc",
+                "limit": "1",
+            }
+            response = self._session.get(
+                f"{self.url}/rest/v1/telemetry",
+                params=params,
+                timeout=10,
+            )
+            if response.status_code != 200:
+                print(f"Status read error: HTTP {response.status_code}")
+                return None
+
+            rows = response.json()
+            if not rows:
+                return None
+
+            row = rows[0]
+            age = self._row_age(row.get("created_at"))
+            if age is not None:
+                self.last_seen = time.time() - age  # device time, not poll time
+            return {
+                "auth": row.get("auth"),
+                "light": row.get("light"),
+                "music": row.get("music"),
+                "temperature": row.get("temperature"),
+                "humidity": row.get("humidity"),
+            }
+        except Exception as e:
+            print(f"Status read error: {str(e)}")
+            return None
 
     def send_command(self, command):
         """Insert a pending command row into the Supabase commands table."""
@@ -326,7 +405,7 @@ class SupabaseTransport(CommunicationTransport):
         try:
             params = {
                 "device_id": f"eq.{self.device_id}",
-                "select": "temperature",
+                "select": "temperature,created_at",
                 "order": "created_at.desc",
                 "limit": "1",
             }
@@ -343,6 +422,9 @@ class SupabaseTransport(CommunicationTransport):
             if not rows:
                 return None
             try:
+                age = self._row_age(rows[0].get("created_at"))
+                if age is not None:
+                    self.last_seen = time.time() - age
                 return float(rows[0]["temperature"])
             except (KeyError, TypeError, ValueError):
                 return None
@@ -352,7 +434,13 @@ class SupabaseTransport(CommunicationTransport):
 
     @property
     def is_connected(self):
-        return bool(self.connected)
+        """True only when Supabase is reachable AND the device recently
+        posted telemetry — otherwise the UI cannot claim real hardware status."""
+        if not self.connected or self._session is None:
+            return False
+        if self.last_seen is None:
+            return False
+        return (time.time() - self.last_seen) < _STALE_AFTER_SECONDS
 
 
 # ===========================================================================

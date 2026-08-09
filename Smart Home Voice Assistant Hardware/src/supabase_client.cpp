@@ -82,12 +82,7 @@ void SupabaseClient::uploadTelemetry(unsigned long now) {
     if (now - m_lastTelemetryMs < SUPABASE_TELEMETRY_INTERVAL_MS) return;
     m_lastTelemetryMs = now;
 
-    if (m_sensor == nullptr || !m_sensor->hasValidReading()) return;
-
-    float const temperature = m_sensor->getTemperature();
-    if (std::isfinite(temperature)) {
-        postTemperature(temperature);
-    }
+    postTelemetry();
 }
 
 bool SupabaseClient::pollCommand() {
@@ -148,12 +143,8 @@ bool SupabaseClient::pollCommand() {
     m_serial->executeLine(command);
 
     if (strcmp(command, "TEMP") == 0) {
-        float const temp = m_serial->getLastTemperature();
-        if (std::isfinite(temp)) {
-            postTemperature(temp);
-        } else {
-            Serial.println("[Supabase] TEMP: no valid reading — telemetry not posted");
-        }
+        // Push an immediate telemetry row so the caller sees the fresh reading.
+        postTelemetry();
     }
 
     if (rowId[0] == '\0') {
@@ -183,7 +174,7 @@ bool SupabaseClient::markProcessed(const char *rowId) {
     return ok;
 }
 
-bool SupabaseClient::postTemperature(float temperature) {
+bool SupabaseClient::postTelemetry() {
     time_t const now = time(nullptr);
     if (now < 100000) {
         Serial.println("[Supabase] telemetry: clock not synchronized — skipping post");
@@ -199,9 +190,20 @@ bool SupabaseClient::postTemperature(float temperature) {
 
     JsonDocument doc;
     JsonObject obj = doc.to<JsonArray>().add<JsonObject>();
-    obj["device_id"]  = m_deviceId;
-    obj["temperature"] = temperature;
-    obj["created_at"]  = ts;
+    obj["device_id"] = m_deviceId;
+
+    // Sensor values only when a fresh reading exists.
+    bool sensorOk = (m_sensor != nullptr && m_sensor->hasValidReading());
+    float const temperature = sensorOk ? m_sensor->getTemperature() : NAN;
+    float const humidity    = sensorOk ? m_sensor->getHumidity() : NAN;
+    if (std::isfinite(temperature)) obj["temperature"] = temperature;
+    if (std::isfinite(humidity))    obj["humidity"]    = humidity;
+
+    // Device state always reported — this is what keeps the cloud UI in sync.
+    obj["light"] = m_serial->isLightOn();
+    obj["music"] = m_serial->isMusicOn();
+    obj["auth"]  = m_serial->isAuthenticated();
+    obj["created_at"] = ts;
 
     String payload;
     serializeJson(doc, payload);
@@ -219,7 +221,9 @@ bool SupabaseClient::postTemperature(float temperature) {
     int const code = http.POST(payload);
     bool const ok = (code == HTTP_CODE_OK || code == HTTP_CODE_CREATED || code == HTTP_CODE_NO_CONTENT);
     if (ok) {
-        Serial.printf("[Supabase] telemetry posted: %.1f C\n", temperature);
+        Serial.printf("[Supabase] telemetry posted: light=%d music=%d auth=%d temp=%.1f\n",
+                      m_serial->isLightOn(), m_serial->isMusicOn(),
+                      m_serial->isAuthenticated(), temperature);
     } else {
         Serial.printf("[Supabase] postTelemetry: HTTP %d\n", code);
     }
