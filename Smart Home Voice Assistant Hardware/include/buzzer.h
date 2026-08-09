@@ -29,14 +29,21 @@ public:
     /** @brief  Stop immediately and turn the buzzer OFF. */
     void stop();
 
-    /** @return true while a sound pattern is active. */
+    /** @brief  Turn the buzzer ON continuously.  Non-blocking. */
+    void on();
+
+    /** @brief  Turn the buzzer OFF immediately. */
+    void off();
+
+    /** @return true while a sound pattern (or steady ON) is active. */
     bool isPlaying() const;
 
 private:
     enum class Pattern : uint8_t {
         IDLE,
         ON,
-        OFF
+        OFF,
+        STEADY
     };
 
     // -- state ------------------------------------------------------------

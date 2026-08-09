@@ -57,6 +57,15 @@ void Buzzer::stop() {
     setOutput(false);
 }
 
+void Buzzer::on() {
+    m_pattern = Pattern::STEADY;
+    setOutput(true);
+}
+
+void Buzzer::off() {
+    stop();
+}
+
 bool Buzzer::isPlaying() const {
     return m_pattern != Pattern::IDLE;
 }
@@ -110,6 +119,7 @@ void Buzzer::updatePattern(unsigned long now) {
             break;
 
         case Pattern::IDLE:
+        case Pattern::STEADY:
             break;
     }
 }

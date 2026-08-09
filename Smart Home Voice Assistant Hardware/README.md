@@ -31,9 +31,10 @@ Designed for voice-assistant integration, this node can be driven by an external
 |---|---|
 | LED indication (4 channels) | Non-blocking state machine with static on/off and configurable blink sequences |
 | Audio feedback | Active buzzer with three distinct patterns: success, error, warning |
-| Temperature & humidity monitoring | DHT22 cached via Adafruit library, polled at a configurable interval |
+| Temperature & humidity monitoring | DHT11 cached via Adafruit library, polled at a configurable interval |
 | Serial command interface | Case-insensitive text protocol, fixed 64-byte line buffer, manual parser |
-| Authentication | Password-based gate; all commands except AUTH require prior authentication |
+| Streamlit-compatible protocol | `LIGHT_ON`, `LIGHT_OFF`, `MUSIC_ON`, `MUSIC_OFF`, `TEMP` — `TEMP` replies with only the temperature float |
+| Authentication | Optional `AUTH <password>` command; does not gate the Streamlit commands |
 | Status reporting | Multi-line status output with current system state |
 
 ---
@@ -46,8 +47,8 @@ Designed for voice-assistant integration, this node can be driven by an external
 | LED (any colour) | 4 | Auth, Light, Music, Error indication |
 | Resistor 220 Ω | 4 | Current limiting for LEDs |
 | Active buzzer | 1 | Audio feedback (3.3 V) |
-| DHT22 | 1 | Temperature and humidity sensor |
-| Pull-up resistor 10 kΩ | 1 | DHT22 data line |
+| DHT11 | 1 | Temperature and humidity sensor |
+| Pull-up resistor 10 kΩ | 1 | DHT11 data line |
 
 ---
 
@@ -60,7 +61,7 @@ Designed for voice-assistant integration, this node can be driven by an external
 | GPIO 5 | Music LED | Voice / Music status (active HIGH) |
 | GPIO 15 | Error LED | Error indicator (active HIGH) |
 | GPIO 16 | Buzzer | Active buzzer (HIGH = on) |
-| GPIO 23 | DHT22 Data | Digital pin with 10 kΩ pull-up |
+| GPIO 23 | DHT11 Data | Digital pin with 10 kΩ pull-up |
 
 > **Note:** Pin assignments are defined in `include/config.h` and can be changed without modifying application logic.
 
@@ -114,13 +115,13 @@ Smart Home Voice Assistant Hardware/
 │   ├── config.h                # Pin assignments, timing constants, password
 │   ├── light_controller.h      # LED control API
 │   ├── buzzer.h                # Buzzer API
-│   ├── dht_sensor.h            # DHT22 sensor API
+│   ├── dht_sensor.h            # DHT11 sensor API
 │   └── serial_manager.h        # Serial command coordinator API
 └── src/
     ├── main.cpp                # Application entry point, static instances
     ├── light_controller.cpp    # LED blink state machine
     ├── buzzer.cpp              # Audio pattern finite-state machine
-    ├── dht_sensor.cpp          # DHT22 polling & caching
+    ├── dht_sensor.cpp          # DHT11 polling & caching
     └── serial_manager.cpp      # UART protocol parser & dispatcher
 ```
 
@@ -142,21 +143,25 @@ Smart Home Voice Assistant Hardware/
 ### Protocol Rules
 
 1. Every command triggers exactly one response line (or a multi-line response for `STATUS`).
-2. `AUTH` must succeed before any other command is accepted.
-3. Unknown commands receive `UNKNOWN_COMMAND`.
-4. Unauthenticated commands receive `NOT_AUTHENTICATED`.
+2. `TEMP` replies with **only** the temperature value as a float (e.g. `28.60`) — no units, no extra text.
+3. Unknown commands are safely ignored (no response, no action).
+4. Lines are trimmed of surrounding spaces / tabs / carriage returns before processing.
 
 ---
 
 ## Supported Commands
 
-| Command | Arguments | Description | Auth Required |
-|---|---|---|---|
-| `AUTH` | `<password>` | Authenticate the session | No |
-| `LIGHT` | `ON` / `OFF` | Toggle the Light LED | Yes |
-| `MUSIC` | `PLAY` / `STOP` | Toggle the Music LED | Yes |
-| `TEMP` | — | Read temperature & humidity | Yes |
-| `STATUS` | — | Report full system state | Yes |
+| Command | Arguments | Description |
+|---|---|---|
+| `LIGHT_ON` | — | Turn the Light LED ON |
+| `LIGHT_OFF` | — | Turn the Light LED OFF |
+| `MUSIC_ON` | — | Turn the buzzer ON (Music LED follows) |
+| `MUSIC_OFF` | — | Turn the buzzer OFF (Music LED follows) |
+| `TEMP` | — | Read temperature, reply with only the float value |
+| `STATUS` | — | Report full system state |
+| `AUTH` *(optional)* | `<password>` | Authenticate the session (feedback only) |
+
+**Legacy aliases** (still accepted): `LIGHT ON` / `LIGHT OFF`, `MUSIC PLAY` / `MUSIC STOP`.
 
 **Default password:** `esp32` (configurable in `config.h` via `AUTH_PASSWORD`)
 
@@ -166,18 +171,16 @@ Smart Home Voice Assistant Hardware/
 
 | Command | Response |
 |---|---|
+| `LIGHT_ON` | `LIGHT_ON` |
+| `LIGHT_OFF` | `LIGHT_OFF` |
+| `MUSIC_ON` | `MUSIC_ON` |
+| `MUSIC_OFF` | `MUSIC_OFF` |
+| `TEMP` | `28.60` _(only the float — example)_ |
+| `STATUS` | `STATUS`\n`AUTH=1`\n`LIGHT=1`\n`MUSIC=0`\n`TEMP=28.6`\n`HUM=61.3` |
 | `AUTH esp32` | `AUTH_OK` |
 | `AUTH wrong` | `AUTH_FAILED` |
-| `LIGHT ON` | `LIGHT_ON` |
-| `LIGHT OFF` | `LIGHT_OFF` |
-| `MUSIC PLAY` | `MUSIC_PLAYING` |
-| `MUSIC STOP` | `MUSIC_STOPPED` |
-| `TEMP` | `TEMP 25.6 61.3` _(example)_ |
-| `TEMP` (sensor error) | `TEMP_ERROR` |
-| `STATUS` | `STATUS`\n`AUTH=1`\n`LIGHT=1`\n`MUSIC=0`\n`TEMP=25.6`\n`HUM=61.3` |
-| Any command before auth | `NOT_AUTHENTICATED` |
-| Invalid command | `UNKNOWN_COMMAND` |
 | Invalid argument | `UNKNOWN_ARGUMENT` |
+| Anything else | *(silently ignored)* |
 
 ---
 
@@ -227,16 +230,15 @@ lib_deps =
 
 | Test Case | Input | Expected Result |
 |---|---|---|
-| Unauthenticated command | `LIGHT ON` | Response: `NOT_AUTHENTICATED` |
+| Light on | `LIGHT_ON` | Response: `LIGHT_ON`, Light LED ON |
+| Light off | `LIGHT_OFF` | Response: `LIGHT_OFF`, Light LED OFF |
+| Music on | `MUSIC_ON` | Response: `MUSIC_ON`, buzzer ON, Music LED ON |
+| Music off | `MUSIC_OFF` | Response: `MUSIC_OFF`, buzzer OFF, Music LED OFF |
+| Temperature read | `TEMP` | Response: only the temperature float, e.g. `28.60` |
 | Authentication (correct) | `AUTH esp32` | Response: `AUTH_OK`, Auth LED ON, buzzer success beep |
 | Authentication (wrong) | `AUTH wrong` | Response: `AUTH_FAILED`, Auth LED OFF, buzzer error beep |
-| Light on | `LIGHT ON` | Response: `LIGHT_ON`, Light LED ON |
-| Light off | `LIGHT OFF` | Response: `LIGHT_OFF`, Light LED OFF |
-| Music play | `MUSIC PLAY` | Response: `MUSIC_PLAYING`, Music LED ON |
-| Music stop | `MUSIC STOP` | Response: `MUSIC_STOPPED`, Music LED OFF |
-| Temperature read | `TEMP` | Response: `TEMP 25.6 61.3` (or `TEMP_ERROR` if sensor unavailable) |
 | System status | `STATUS` | Multi-line response with all subsystem states |
-| Invalid command | `FOO` | Response: `UNKNOWN_COMMAND` |
+| Invalid command | `FOO` | Silently ignored (no response) |
 
 ---
 

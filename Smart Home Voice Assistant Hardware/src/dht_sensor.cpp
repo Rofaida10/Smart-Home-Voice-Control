@@ -44,6 +44,22 @@ void DHTSensor::update() {
 }
 
 // ---------------------------------------------------------------------------
+// readNow()  —  on-demand read, returns the temperature directly
+// ---------------------------------------------------------------------------
+
+float DHTSensor::readNow() {
+    float temperature = NAN;
+    float humidity    = NAN;
+
+    if (readSensor(temperature, humidity)) {
+        updateCache(temperature, humidity);
+        m_lastSuccessfulRead = millis();
+        return temperature;
+    }
+    return m_lastTemperature;   // last valid value, or NaN if never read
+}
+
+// ---------------------------------------------------------------------------
 // Accessors
 // ---------------------------------------------------------------------------
 

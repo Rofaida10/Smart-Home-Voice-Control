@@ -54,10 +54,10 @@ void LightController::update() {
 void LightController::authOn()   { setLedState(ID_AUTH,  LedMode::ON);  }
 void LightController::authOff()  { setLedState(ID_AUTH,  LedMode::OFF); }
 
-void LightController::lightOn()  { setLedState(ID_LIGHT, LedMode::ON);  }
+void LightController::lightOn()  { musicOff();  setLedState(ID_LIGHT, LedMode::ON);  }
 void LightController::lightOff() { setLedState(ID_LIGHT, LedMode::OFF); }
 
-void LightController::musicOn()  { setLedState(ID_MUSIC, LedMode::ON);  }
+void LightController::musicOn()  { lightOff();  setLedState(ID_MUSIC, LedMode::ON);  }
 void LightController::musicOff() { setLedState(ID_MUSIC, LedMode::OFF); }
 
 void LightController::allOn() {
