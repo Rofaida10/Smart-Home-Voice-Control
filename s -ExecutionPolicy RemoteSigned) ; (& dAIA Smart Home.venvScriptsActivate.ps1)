@@ -1,0 +1,52 @@
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m refs/heads/test@{Sun Aug 9 13:03:13 2026}: reset: moving to origin/main
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sun Aug 9 13:03:13 2026}: reset: moving to origin/main
+[33m814fb42[m[33m ([m[1;31morigin/test[m[33m)[m refs/heads/test@{Sun Aug 9 12:55:56 2026}: branch: Created from refs/remotes/origin/test
+[33m814fb42[m[33m ([m[1;31morigin/test[m[33m)[m HEAD@{Sun Aug 9 12:55:56 2026}: checkout: moving from main to test
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sun Aug 9 12:38:42 2026}: reset: moving to origin/main
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m refs/heads/main@{Sun Aug 9 12:37:04 2026}: pull origin main: Fast-forward
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{Sun Aug 9 12:37:04 2026}: pull origin main: Fast-forward
+[33me33a54c[m[33m ([m[1;35mrefs/stash[m[33m)[m refs/stash@{Sun Aug 9 12:36:58 2026}: WIP on main: 3bf01d6 Add auto telemetry upload, exclusive mode LEDs, and wifi/supabase support
+[33m3bf01d6[m HEAD@{Sun Aug 9 12:36:58 2026}: reset: moving to HEAD
+[33m67d9933[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtest[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m refs/remotes/origin/main@{Sun Aug 9 12:36:11 2026}: pull origin main: fast-forward
+[33m3bf01d6[m refs/remotes/origin/main@{Sat Aug 8 22:46:31 2026}: update by push
+[33m3bf01d6[m refs/heads/main@{Sat Aug 8 22:46:12 2026}: commit (amend): Add auto telemetry upload, exclusive mode LEDs, and wifi/supabase support
+[33m3bf01d6[m HEAD@{Sat Aug 8 22:46:12 2026}: commit (amend): Add auto telemetry upload, exclusive mode LEDs, and wifi/supabase support
+[33mbd29603[m refs/heads/main@{Sat Aug 8 22:44:07 2026}: commit: Add auto telemetry upload, exclusive mode LEDs, and wifi/supabase support
+[33mbd29603[m HEAD@{Sat Aug 8 22:44:07 2026}: commit: Add auto telemetry upload, exclusive mode LEDs, and wifi/supabase support
+[33m05add5a[m refs/heads/main@{Fri Aug 7 09:03:03 2026}: pull: Fast-forward
+[33m05add5a[m HEAD@{Fri Aug 7 09:03:03 2026}: pull: Fast-forward
+[33m05add5a[m refs/remotes/origin/main@{Fri Aug 7 09:02:43 2026}: fetch --all --prune: fast-forward
+[33m814fb42[m[33m ([m[1;31morigin/test[m[33m)[m refs/remotes/origin/test@{Fri Aug 7 09:02:43 2026}: fetch --all --prune: fast-forward
+[33m0bbe090[m refs/remotes/origin/main@{Tue Aug 4 21:32:20 2026}: fetch: fast-forward
+[33m0e1eff0[m refs/heads/main@{Tue Aug 4 21:30:17 2026}: pull origin main: Fast-forward
+[33m0e1eff0[m HEAD@{Tue Aug 4 21:30:17 2026}: pull origin main: Fast-forward
+[33m0e1eff0[m refs/remotes/origin/main@{Tue Aug 4 21:27:24 2026}: fetch: fast-forward
+[33md2a3702[m refs/remotes/origin/test@{Tue Aug 4 21:27:24 2026}: fetch: storing head
+[33m404ff1d[m[33m ([m[1;31morigin/test2[m[33m)[m refs/remotes/origin/test2@{Tue Aug 4 21:27:24 2026}: fetch: storing head
+[33m826db0d[m refs/remotes/origin/main@{Tue Aug 4 16:42:46 2026}: fetch: fast-forward
+[33m80a6f54[m refs/remotes/origin/main@{Tue Aug 4 15:26:58 2026}: fetch: fast-forward
+[33m2a52cc3[m refs/remotes/origin/main@{Tue Aug 4 15:13:55 2026}: fetch: fast-forward
+[33m1433a9e[m refs/remotes/origin/main@{Tue Aug 4 15:10:54 2026}: fetch: fast-forward
+[33mcde9fd8[m refs/remotes/origin/main@{Tue Aug 4 15:07:48 2026}: fetch: fast-forward
+[33m4d0dfb1[m refs/remotes/origin/main@{Tue Aug 4 15:05:11 2026}: fetch: fast-forward
+[33md741395[m refs/heads/main@{Tue Aug 4 15:02:25 2026}: pull: Fast-forward
+[33md741395[m HEAD@{Tue Aug 4 15:02:25 2026}: pull: Fast-forward
+[33md741395[m refs/remotes/origin/main@{Tue Aug 4 15:01:57 2026}: fetch: fast-forward
+[33m3425171[m refs/remotes/origin/main@{Tue Aug 4 14:57:32 2026}: update by push
+[33m3425171[m refs/heads/main@{Tue Aug 4 14:57:14 2026}: merge master: Merge made by the 'ort' strategy.
+[33m3425171[m HEAD@{Tue Aug 4 14:57:14 2026}: merge master: Merge made by the 'ort' strategy.
+[33mab413c3[m refs/heads/main@{Tue Aug 4 14:54:20 2026}: branch: Created from refs/remotes/origin/main
+[33mab413c3[m HEAD@{Tue Aug 4 14:54:20 2026}: checkout: moving from master to main
+[33mab413c3[m refs/remotes/origin/main@{Tue Aug 4 14:50:29 2026}: fetch: fast-forward
+[33m8b3f90b[m refs/remotes/origin/main@{Tue Aug 4 14:47:28 2026}: fetch: fast-forward
+[33m937356a[m refs/remotes/origin/main@{Tue Aug 4 14:27:51 2026}: fetch: fast-forward
+[33m579ee75[m refs/remotes/origin/main@{Tue Aug 4 11:28:46 2026}: fetch: fast-forward
+[33mde80aad[m refs/remotes/origin/main@{Mon Aug 3 23:44:31 2026}: fetch: fast-forward
+[33m9415306[m refs/remotes/origin/main@{Mon Aug 3 23:12:07 2026}: fetch: fast-forward
+[33m5fa1071[m[33m ([m[1;31morigin/Mohamed[m[33m)[m refs/remotes/origin/HEAD@{Mon Aug 3 21:22:40 2026}: fetch
+[33m5fa1071[m[33m ([m[1;31morigin/Mohamed[m[33m)[m refs/remotes/origin/Mohamed@{Mon Aug 3 21:22:40 2026}: fetch: storing head
+[33mbaafb3e[m[33m ([m[1;31morigin/Rofaida[m[33m)[m refs/remotes/origin/Rofaida@{Mon Aug 3 21:22:40 2026}: fetch: storing head
+[33m5fa1071[m[33m ([m[1;31morigin/Mohamed[m[33m)[m refs/remotes/origin/main@{Mon Aug 3 21:22:40 2026}: fetch: storing head
+[33md2fef06[m[33m ([m[1;31morigin/salah[m[33m, [m[1;32mmaster[m[33m)[m refs/remotes/origin/salah@{Mon Aug 3 21:22:40 2026}: fetch: storing head
+[33md2fef06[m[33m ([m[1;31morigin/salah[m[33m, [m[1;32mmaster[m[33m)[m refs/heads/master@{Thu Jul 30 17:24:31 2026}: commit (initial): Add ESP32 hardware firmware
+[33md2fef06[m[33m ([m[1;31morigin/salah[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{Thu Jul 30 17:24:31 2026}: commit (initial): Add ESP32 hardware firmware
